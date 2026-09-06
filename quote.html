@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Get Your FREE Quote | Dalbagni Insurance</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="quote.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <img src="images/logo.png" alt="Dalbagni Insurance Logo">
+            </a>
+            <a href="index.html" class="back-link">← Back to Home</a>
+        </div>
+    </header>
+
+    <!-- Quote Form Section -->
+    <main class="quote-page-wrapper">
+        <div class="quote-container">
+            <div class="quote-header">
+                <span class="subtitle">No Obligation, Fast Response</span>
+                <h1>Get Your FREE Quote</h1>
+                <p>Fill out the form below to help us tailor the right coverage options for you and your family.</p>
+            </div>
+
+            <form id="free-quote-form" class="quote-form">
+                <!-- Name Grid -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="firstName">First Name <span class="required">*</span></label>
+                        <input type="text" id="firstName" name="firstName" placeholder="John" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName">Last Name <span class="required">*</span></label>
+                        <input type="text" id="lastName" name="lastName" placeholder="Doe" required>
+                    </div>
+                </div>
+
+                <!-- Contact Grid -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="email">Email Address <span class="required">*</span></label>
+                        <input type="email" id="email" name="email" placeholder="john@example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone Number <span class="required">*</span></label>
+                        <input type="tel" id="phone" name="phone" placeholder="(555) 000-0000" required>
+                    </div>
+                </div>
+
+                <!-- Demographics Grid -->
+                <div class="form-row three-col">
+                    <div class="form-group">
+                        <label for="zipCode">Zip Code <span class="required">*</span></label>
+                        <input type="text" id="zipCode" name="zipCode" maxlength="5" placeholder="12345" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="dob">Date of Birth <span class="required">*</span></label>
+                        <input type="text" id="dob" name="dob" placeholder="MM/DD/YYYY" pattern="\d{2}/\d{2}/\d{4}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="income">Approx. Household Income</label>
+                        <input type="text" id="income" name="income" placeholder="$50,000">
+                    </div>
+                </div>
+
+                <!-- Referral Source -->
+                <div class="form-group">
+                    <label for="referralSource">How did you hear about us?</label>
+                    <select id="referralSource" name="referralSource">
+                        <option value="" disabled selected>Click for Dropdown</option>
+                        <option value="Dental Nacho">Dental Nacho</option>
+                        <option value="DIG Group">DIG Group</option>
+                        <option value="Google">Google</option>
+                        <option value="Facebook/Instagram Ad">Facebook/Instagram Ad</option>
+                        <option value="Nifty Thrifty">Nifty Thrifty</option>
+                        <option value="Referral / Other">Referral / Other...</option>
+                    </select>
+                </div>
+
+                <!-- Additional Details -->
+                <div class="form-group">
+                    <label for="details">Let us know any other important details</label>
+                    <textarea id="details" name="details" rows="4" placeholder="Additional Birthdays, Current Coverage, Medications, Pre-Existing Conditions, Upcoming Procedures, etc..."></textarea>
+                </div>
+
+                <!-- Legal Compliance Consent Disclaimer -->
+                <div class="consent-box">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="tcpaConsent" name="tcpaConsent" required>
+                        <span class="checkmark"></span>
+                        <span class="consent-text">
+                            By clicking the <strong>Get My Quote</strong> button, I consent to be contacted by <strong>Dalbagni Insurance</strong> regarding my health insurance inquiry at the email address and telephone number I provided, including, without limitation, communications sent via text message to my cell phone or communications sent using an autodialer or prerecorded message. This acknowledgement constitutes my written consent to receive such communications. I agree and consent to this website's <a href="terms.html" target="_blank">Terms and Conditions</a> and <a href="privacy.html" target="_blank">Privacy Policy</a>. Message and data rates may apply. Message frequency varies. Text STOP to opt-out of future text messages or HELP for help.
+                        </span>
+                    </label>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="submit-quote-btn">Get My Quote</button>
+            </form>
+        </div>
+    </main>
+<!-- Frontend Script to Connect to Python Backend -->
+    <script>
+    document.getElementById('free-quote-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Submitting...';
+
+        const formData = {
+            formType: 'Quote Request',
+            name: `${e.target.firstName.value} ${e.target.lastName.value}`,
+            email: e.target.email.value,
+            phone: e.target.phone.value,
+            message: `ZIP: ${e.target.zipCode.value} | DOB: ${e.target.dob.value} | Income: ${e.target.income.value || 'N/A'} | Referral: ${e.target.referralSource.value || 'N/A'} | Details: ${e.target.details.value || 'None'}`
+        };
+
+        try {
+            const response = await fetch('http://127.0.0.1:5000/api/submit-form', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('Thank you! Your quote request has been submitted successfully.');
+                e.target.reset();
+            } else {
+                alert('There was an issue submitting your request. Please try again.');
+            }
+        } catch (error) {
+            console.error('Submission error:', error);
+            alert('Could not connect to the server. Please ensure python app.py is running!');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerText = 'Get My Quote';
+        }
+    });
+    </script>
+</body>
+</html>
