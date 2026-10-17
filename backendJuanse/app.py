@@ -1,4 +1,5 @@
 import os
+import html
 import certifi
 import smtplib
 from email.mime.text import MIMEText
@@ -8,13 +9,11 @@ from flask_cors import CORS
 from pymongo import MongoClient
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for frontend requests
+CORS(app)
 
-# Get environment variables
 mongo_uri = os.getenv("MONGO_URI")
 email_user = os.getenv("EMAIL_USER")
 email_pass = os.getenv("EMAIL_PASS")
@@ -29,42 +28,53 @@ try:
 except Exception as e:
     print(f"MongoDB connection error: {e}")
 
+def sanitize(input_string):
+    """Encodes standard HTML characters to prevent XSS issues."""
+    if not isinstance(input_string, str):
+        return ""
+    return html.escape(input_string.strip())
+
 def send_email_notification(data):
-    """Sends an email notification via Gmail SMTP when a new form is submitted."""
-    if not email_user or not email_pass:
-        print("Email credentials missing in .env — skipping email notification.")
+    """Loads email_template.html and transmits it via Gmail SMTP."""
+    if not email_user or not email_pass or not notification_email:
+        print("Email credentials or notification recipient missing in .env.")
         return
 
     try:
-        subject = f"New Quote Request: {data.get('formType', 'Website Form')}"
-        
-        # Build readable email body
-        body = f"""
-New Form Submission Received!
+        # Load the HTML template file from disk
+        template_path = os.path.join(os.path.dirname(__file__), 'email_template.html')
+        with open(template_path, 'r', encoding='utf-8') as file:
+            html_template = file.read()
 
-Form Type: {data.get('formType', 'N/A')}
-Name: {data.get('name', 'N/A')}
-Email: {data.get('email', 'N/A')}
-Phone: {data.get('phone', 'N/A')}
-Message: {data.get('message', 'N/A')}
-        """
+        # Fill in the HTML template placeholders with sanitized client data
+        rendered_html = html_template.format(
+            name=sanitize(data.get('name', 'N/A')),
+            email=sanitize(data.get('email', 'N/A')),
+            phone=sanitize(data.get('phone', 'N/A')),
+            zipCode=sanitize(data.get('zipCode', 'N/A')),
+            dob=sanitize(data.get('dob', 'N/A')),
+            income=sanitize(data.get('income', 'N/A')),
+            referralSource=sanitize(data.get('referralSource', 'N/A')),
+            details=sanitize(data.get('details', 'None'))
+        )
 
-        msg = MIMEMultipart()
+        msg = MIMEMultipart('alternative')
         msg['From'] = email_user
         msg['To'] = notification_email
-        msg['Subject'] = subject
-        msg.attach(MIMEText(body, 'plain'))
+        msg['Subject'] = f"⚡ New Quote Request: {sanitize(data.get('name', 'Client'))}"
 
-        # Connect to Gmail SMTP Server
-        server = smtplib.SMTP('smtp.gmail.com', 587)
-        server.starttls()
-        server.login(email_user, email_pass)
-        server.send_message(msg)
-        server.quit()
+        # Attach rendered HTML body
+        msg.attach(MIMEText(rendered_html, 'html'))
 
-        print("Notification email sent successfully!")
+        # Send via Gmail SMTP
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()
+            server.login(email_user, email_pass)
+            server.send_message(msg)
+
+        print("Formatted HTML email notification sent successfully!")
     except Exception as e:
-        print(f"Failed to send email: {e}")
+        print(f"Failed to send email notification: {e}")
 
 @app.route('/api/submit-form', methods=['POST'])
 def submit_form():
@@ -78,7 +88,7 @@ def submit_form():
         result = submissions_collection.insert_one(data)
         print(f"Inserted document ID: {result.inserted_id}")
 
-        # 2. Send Email Notification
+        # 2. Send Styled Email
         send_email_notification(data)
 
         return jsonify({"success": True, "message": "Form submitted successfully!"}), 200
