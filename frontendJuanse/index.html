@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dalbagni Health | Health Insurance Solutions</title>
+    <title>Dalbagni Health | Health Insurance</title>
     <!-- Import Playfair Display & Plus Jakarta Sans from Google Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,8 +17,7 @@
         <div class="nav-container">
             <div class="logo-area">
                 <img src="images/logo.png" alt="Dalbagni Health Logo" class="site-logo">
-                <span class="brand-name">Dalbagni Health</span>
-            </div>
+                </div>
             
             <nav class="nav-links">
                 <a href="#home" data-en="Home" data-es="Inicio">Home</a>
@@ -34,7 +33,7 @@
     <section id="home" class="curved-hero">
     <div class="curved-hero-overlay">
         <div class="curved-hero-content">
-            <span class="welcome-text" data-en="Welcome to Dalbagni Insurance" data-es="Bienvenido a Dalbagni Insurance">Welcome to Dalbagni Insurance</span>
+            <span class="welcome-text" data-en="Welcome to Dalbagni Health" data-es="Bienvenido a Dalbagni Health">Welcome to Dalbagni Health</span>
             <div class="badge-pill" data-en="Over 5 Years" data-es="Más de 5 Años">Over 5 Years</div>
             <h1 data-en="Helping Families<br>and Communities" data-es="Ayudando a Familias<br>y Comunidades">Helping Families<br>and Communities</h1>
             <div class="hero-actions">
@@ -261,10 +260,10 @@
             </div>
 
             <div class="contact-form-card">
-                <h3>Dalbagni Insurance Solutions</h3>
+                <h3>Dalbagni Insurance</h3>
                 <p data-en="Protecting Your Well-Being and Supporting Our Community for Over 10 Years" data-es="Protegiendo su bienestar y apoyando a nuestra comunidad por más de 10 años">Protecting Your Well-Being and Supporting Our Community for Over 10 Years</p>
 
-                <form action="#" method="POST" class="contact-form">
+                <form id="contact-form" class="contact-form">
                     <div class="form-group">
                         <label for="fullname" data-en="Full Name" data-es="Nombre Completo">Full Name</label>
                         <input type="text" id="fullname" name="fullname" placeholder="John Doe" required>
@@ -287,14 +286,16 @@
                         <label for="service" data-en="What do you need assistance with?" data-es="¿En qué necesita asistencia?">What do you need assistance with?</label>
                         <select id="service" name="service" required>
                             <option value="" disabled selected data-en="Select an option..." data-es="Seleccione una opción...">Select an option...</option>
-                            <option value="medicare" data-en="Medicare Coverage" data-es="Cobertura de Medicare">Medicare Coverage</option>
                             <option value="individual" data-en="Individual & Family Health Plans" data-es="Planes de salud individuales y familiares">Individual & Family Health Plans</option>
-                            <option value="business" data-en="Business / Group Health Insurance" data-es="Seguro de salud para empresas / grupos">Business / Group Health Insurance</option>
+                            <option value="business" data-en="Business / Small Group Health Insurance" data-es="Seguro de salud para empresas / grupos">Business / Group Health Insurance</option>
                             <option value="other" data-en="Other Resources & Assistance" data-es="Otros recursos y asistencia">Other Resources & Assistance</option>
                         </select>
                     </div>
 
-                    <button type="submit" class="btn btn-submit" data-en="SEND" data-es="ENVIAR">SEND</button>
+                    <button type="submit" id="contact-submit-btn" class="btn btn-submit" data-en="SEND" data-es="ENVIAR">SEND</button>
+                    
+                    <!-- Inline Status Message Box -->
+                    <div id="contact-response-message" style="margin-top: 15px; display: none;"></div>
                 </form>
             </div>
         </div>
@@ -316,6 +317,76 @@
                 el.innerHTML = el.getAttribute(`data-${currentLang}`);
             });
         });
+    </script>
+
+    <!-- Contact Form Async Submission Handler -->
+    <script>
+        document.getElementById('contact-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('contact-submit-btn');
+            const responseContainer = document.getElementById('contact-response-message');
+
+            const isSpanish = currentLang === 'es';
+
+            submitBtn.disabled = true;
+            submitBtn.innerText = isSpanish ? 'Enviando...' : 'Sending...';
+            responseContainer.style.display = 'none';
+
+            const payload = {
+                formType: 'Contact Inquiry',
+                name: document.getElementById('fullname').value.trim(),
+                phone: document.getElementById('phone').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                details: document.getElementById('service').value
+            };
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/api/submit-contact', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    responseContainer.style.color = '#0f5132';
+                    responseContainer.style.backgroundColor = '#d1e7dd';
+                    responseContainer.style.padding = '12px';
+                    responseContainer.style.borderRadius = '6px';
+                    responseContainer.style.textAlign = 'center';
+                    responseContainer.style.fontSize = '14px';
+
+                    responseContainer.innerText = isSpanish 
+                        ? "Mensaje enviado. Un agente de Dalbagni Health se pondrá en contacto con usted en breve." 
+                        : "Message sent. An agent with Dalbagni Health will get back to you shortly.";
+
+                    responseContainer.style.display = 'block';
+                    document.getElementById('contact-form').reset();
+                } else {
+                    throw new Error(result.message || 'Submission failed');
+                }
+            } catch (error) {
+                console.error('Submission Error:', error);
+                responseContainer.style.color = '#842029';
+                responseContainer.style.backgroundColor = '#f8d7da';
+                responseContainer.style.padding = '12px';
+                responseContainer.style.borderRadius = '6px';
+                responseContainer.style.textAlign = 'center';
+                responseContainer.style.fontSize = '14px';
+
+                responseContainer.innerText = isSpanish 
+                    ? 'No se pudo enviar el mensaje. Por favor intente de nuevo.' 
+                    : 'Unable to send message. Please try again later.';
+
+                responseContainer.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = isSpanish ? 'ENVIAR' : 'SEND';
+            }
+            });
+            
     </script>
 
     <footer class="site-footer">
@@ -369,5 +440,12 @@
         <p>&copy; 2026 Dalbagni Insurance. All Rights Reserved.</p>
     </div>
 </footer>
+<script>
+    // Automatically tracks a pageview when the site loads
+    document.addEventListener("DOMContentLoaded", () => {
+        fetch('http://127.0.0.1:5000/api/track-view', { method: 'POST' })
+            .catch(err => console.error("Pageview tracking error:", err));
+    });
+</script>
 </body>
 </html>
