@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Get Your FREE Quote | Dalbagni Insurance</title>
+    <title data-en="Get Your FREE Quote | Dalbagni Insurance" data-es="Obtenga su Cotización GRATIS | Dalbagni Insurance">Get Your FREE Quote | Dalbagni Insurance</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="quote.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -16,7 +16,10 @@
             <a href="index.html" class="logo">
                 <img src="images/logo.png" alt="Dalbagni Insurance Logo">
             </a>
-            <a href="index.html" class="back-link">← Back to Home</a>
+            <div class="nav-actions">
+                <a href="#espanol" id="lang-toggle" class="lang-link">Español</a>
+                <a href="index.html" class="back-link" data-en="← Back to Home" data-es="← Volver al Inicio">← Back to Home</a>
+            </div>
         </div>
     </header>
 
@@ -24,135 +27,179 @@
     <main class="quote-page-wrapper">
         <div class="quote-container">
             <div class="quote-header">
-                <span class="subtitle">No Obligation, Fast Response</span>
-                <h1>Get Your FREE Quote</h1>
-                <p>Fill out the form below to help us tailor the right coverage options for you and your family.</p>
+                <span class="subtitle" data-en="No Obligation, Fast Response" data-es="Sin Compromiso, Respuesta Rápida">No Obligation, Fast Response</span>
+                <h1 data-en="Get Your FREE Quote" data-es="Obtenga su Cotización GRATIS">Get Your FREE Quote</h1>
+                <p data-en="Fill out the form below to help us tailor the right coverage options for you and your family." data-es="Complete el siguiente formulario para ayudarnos a encontrar las opciones de cobertura adecuadas para usted y su familia.">Fill out the form below to help us tailor the right coverage options for you and your family.</p>
             </div>
 
             <form id="free-quote-form" class="quote-form">
                 <!-- Name Grid -->
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="firstName">First Name <span class="required">*</span></label>
-                        <input type="text" id="firstName" name="firstName" placeholder="John" required>
+                        <label for="firstName"><span data-en="First Name" data-es="Nombre">First Name</span> <span class="required">*</span></label>
+                        <input type="text" id="firstName" name="firstName" placeholder="John" data-en-placeholder="John" data-es-placeholder="Juan" required>
                     </div>
                     <div class="form-group">
-                        <label for="lastName">Last Name <span class="required">*</span></label>
-                        <input type="text" id="lastName" name="lastName" placeholder="Doe" required>
+                        <label for="lastName"><span data-en="Last Name" data-es="Apellido">Last Name</span> <span class="required">*</span></label>
+                        <input type="text" id="lastName" name="lastName" placeholder="Doe" data-en-placeholder="Doe" data-es-placeholder="Pérez" required>
                     </div>
                 </div>
 
                 <!-- Contact Grid -->
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="email">Email Address <span class="required">*</span></label>
-                        <input type="email" id="email" name="email" placeholder="john@example.com" required>
-                        <span id="email-error" class="error-msg" style="color: #e74c3c; font-size: 0.85rem; display: none;">Please enter a valid email address.</span>
+                        <label for="email"><span data-en="Email Address" data-es="Correo Electrónico">Email Address</span> <span class="required">*</span></label>
+                        <input type="email" id="email" name="email" placeholder="john@example.com" data-en-placeholder="john@example.com" data-es-placeholder="juan@ejemplo.com" required>
+                        <span id="email-error" class="error-msg" style="color: #e74c3c; font-size: 0.85rem; display: none;" data-en="Please enter a valid email address." data-es="Ingrese un correo electrónico válido.">Please enter a valid email address.</span>
                     </div>
                     <div class="form-group">
-                        <label for="phone">Phone Number <span class="required">*</span></label>
+                        <label for="phone"><span data-en="Phone Number" data-es="Número de Teléfono">Phone Number</span> <span class="required">*</span></label>
                         <input type="tel" id="phone" name="phone" placeholder="(555) 000-0000" required>
-                        <span id="phoneError" class="error-message" style="color: #e74c3c; font-size: 0.85rem; display: none;">Please enter a valid 10-digit phone number.</span>
+                        <span id="phoneError" class="error-message" style="color: #e74c3c; font-size: 0.85rem; display: none;" data-en="Please enter a valid 10-digit phone number." data-es="Ingrese un número de teléfono válido de 10 dígitos.">Please enter a valid 10-digit phone number.</span>
                     </div>
                 </div>
 
                 <!-- Demographics Grid -->
                 <div class="form-row three-col">
                     <div class="form-group">
-                        <label for="zipCode">Zip Code <span class="required">*</span></label>
-                        <input type="text" id="zipCode" name="zipCode" maxlength="5" placeholder="12345" required>
+                        <label for="zipCode"><span data-en="Zip Code" data-es="Código Postal">Zip Code</span> <span class="required">*</span></label>
+                        <input type="text" id="zipCode" name="zipCode" maxlength="5" inputmode="numeric" placeholder="12345" required>
+                        <span id="zipError" class="error-message" style="color: #e74c3c; font-size: 0.85rem; display: none;" data-en="Please enter a valid 5-digit ZIP code." data-es="Ingrese un código postal válido de 5 dígitos.">Please enter a valid 5-digit ZIP code.</span>
                     </div>
                     <div class="form-group">
-                        <label for="dob">Date of Birth <span class="required">*</span></label>
-                        <input type="text" id="dob" name="dob" placeholder="MM/DD/YYYY" pattern="\d{2}/\d{2}/\d{4}" required>
+                        <label for="dob"><span data-en="Date of Birth" data-es="Fecha de Nacimiento">Date of Birth</span> <span class="required">*</span></label>
+                        <input type="text" id="dob" name="dob" placeholder="MM/DD/YYYY" data-en-placeholder="MM/DD/YYYY" data-es-placeholder="MM/DD/AAAA" maxlength="10" inputmode="numeric" required>
+                        <span id="dobError" class="error-message" style="color: #e74c3c; font-size: 0.85rem; display: none;" data-en="Please enter a valid date of birth (MM/DD/YYYY)." data-es="Ingrese una fecha de nacimiento válida (MM/DD/AAAA).">Please enter a valid date of birth (MM/DD/YYYY).</span>
                     </div>
                     <div class="form-group">
-                        <label for="income">Approx. Household Income</label>
+                        <label for="income" data-en="Approx. Household Income" data-es="Ingreso Familiar Aprox.">Approx. Household Income</label>
                         <input type="text" id="income" name="income" placeholder="$50,000">
                     </div>
                 </div>
 
                 <!-- Referral Source -->
                 <div class="form-group">
-                    <label for="referralSource">How did you hear about us?</label>
+                    <label for="referralSource" data-en="How did you hear about us?" data-es="¿Cómo se enteró de nosotros?">How did you hear about us?</label>
                     <select id="referralSource" name="referralSource">
-                        <option value="" disabled selected>Click for Dropdown</option>
+                        <option value="" disabled selected data-en="Click for Dropdown" data-es="Seleccione una opción">Click for Dropdown</option>
                         <option value="Dental Nacho">Dental Nacho</option>
                         <option value="DIG Group">DIG Group</option>
                         <option value="Google">Google</option>
-                        <option value="Facebook/Instagram Ad">Facebook/Instagram Ad</option>
+                        <option value="Facebook/Instagram Ad" data-en="Facebook/Instagram Ad" data-es="Anuncio de Facebook/Instagram">Facebook/Instagram Ad</option>
                         <option value="Nifty Thrifty">Nifty Thrifty</option>
-                        <option value="Referral / Other">Referral / Other...</option>
+                        <option value="Referral / Other" data-en="Referral / Other..." data-es="Recomendación / Otro...">Referral / Other...</option>
                     </select>
                 </div>
 
                 <!-- Additional Details -->
                 <div class="form-group">
-                    <label for="details">Let us know any other important details</label>
-                    <textarea id="details" name="details" rows="4" placeholder="Additional Birthdays, Current Coverage, Medications, Pre-Existing Conditions, Upcoming Procedures, etc..."></textarea>
+                    <label for="details" data-en="Let us know any other important details" data-es="Cuéntenos cualquier otro detalle importante">Let us know any other important details</label>
+                    <textarea id="details" name="details" rows="4" placeholder="Additional Birthdays, Current Coverage, Medications, Pre-Existing Conditions, Upcoming Procedures, etc..." data-en-placeholder="Additional Birthdays, Current Coverage, Medications, Pre-Existing Conditions, Upcoming Procedures, etc..." data-es-placeholder="Fechas de nacimiento adicionales, cobertura actual, medicamentos, condiciones preexistentes, procedimientos próximos, etc..."></textarea>
                 </div>
 
-                <!-- Legal Compliance Consent Disclaimer -->
+                <!-- Legal Compliance Consent Disclaimer (one block per language; the visible one is saved as proof of consent) -->
                 <div class="consent-box">
                     <label class="checkbox-container">
                         <input type="checkbox" id="tcpaConsent" name="tcpaConsent" required>
                         <span class="checkmark"></span>
-                        <span class="consent-text">
+                        <span class="consent-text" data-lang="en">
                             By clicking the <strong>Get My Quote</strong> button, I consent to be contacted by <strong>Dalbagni Insurance</strong> regarding my health insurance inquiry at the email address and telephone number I provided, including, without limitation, communications sent via text message to my cell phone or communications sent using an autodialer or prerecorded message. This acknowledgement constitutes my written consent to receive such communications. I agree and consent to this website's <a href="terms.html" target="_blank">Terms and Conditions</a> and <a href="privacy.html" target="_blank">Privacy Policy</a>. Message and data rates may apply. Message frequency varies. Text STOP to opt-out of future text messages or HELP for help.
+                        </span>
+                        <span class="consent-text" data-lang="es" hidden>
+                            Al hacer clic en el botón <strong>Obtener Mi Cotización</strong>, doy mi consentimiento para que <strong>Dalbagni Insurance</strong> se comunique conmigo sobre mi consulta de seguro de salud al correo electrónico y número de teléfono que proporcioné, incluyendo, sin limitación, comunicaciones enviadas por mensaje de texto a mi teléfono celular o comunicaciones realizadas mediante un marcador automático o mensajes pregrabados. Este reconocimiento constituye mi consentimiento por escrito para recibir dichas comunicaciones. Acepto los <a href="terms.html" target="_blank">Términos y Condiciones</a> y la <a href="privacy.html" target="_blank">Política de Privacidad</a> de este sitio web. Pueden aplicarse tarifas por mensajes y datos. La frecuencia de los mensajes varía. Envíe STOP para dejar de recibir mensajes de texto o HELP para obtener ayuda.
                         </span>
                     </label>
                 </div>
 
+                <!-- Spam trap: hidden from people, bots tend to fill it in -->
+                <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position: absolute; left: -9999px;">
+
                 <!-- Submit Button -->
-                <button type="submit" class="submit-quote-btn">Get My Quote</button>
+                <button type="submit" class="submit-quote-btn" data-en="Get My Quote" data-es="Obtener Mi Cotización">Get My Quote</button>
             </form>
         </div>
     </main>
 <!-- Frontend Script to Connect to Python Backend -->
+    <script src="config.js"></script>
+    <script src="validation.js"></script>
+    <script src="lang.js"></script>
     <script>
-    document.getElementById('free-quote-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    submitBtn.disabled = true;
-    submitBtn.innerText = 'Transmitting...';
-
-    // Construct Payload Object
-    const payload = {
-        formType: 'Quote Request',
-        name: `${e.target.firstName.value.trim()} ${e.target.lastName.value.trim()}`,
-        email: e.target.email.value.trim(),
-        phone: e.target.phone.value.trim(),
-        zipCode: e.target.zipCode.value.trim(),
-        dob: e.target.dob.value.trim(),
-        income: e.target.income.value.trim() || 'N/A',
-        referralSource: e.target.referralSource.value || 'N/A',
-        details: e.target.details.value.trim() || 'None'
+    const messages = {
+        en: {
+            sending: 'Sending...',
+            submit: 'Get My Quote',
+            success: 'Your quote request has been submitted successfully!',
+            error: (detail) => `Submission Error: ${detail || 'Please try again.'}`,
+            network: 'We could not reach our server. Please try again in a moment, or call us at (954) 243-0108.'
+        },
+        es: {
+            sending: 'Enviando...',
+            submit: 'Obtener Mi Cotización',
+            success: '¡Su solicitud de cotización fue enviada con éxito!',
+            // Server messages are in English, so Spanish visitors get a general message instead
+            error: () => 'No pudimos enviar su solicitud. Revise la información e intente de nuevo.',
+            network: 'No pudimos conectar con nuestro servidor. Intente de nuevo en un momento o llámenos al (954) 243-0108.'
+        }
     };
 
-    try {
-        const response = await fetch('http://127.0.0.1:5000/api/submit-form', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
+    const quoteForm = document.getElementById('free-quote-form');
 
-        const result = await response.json();
+    const quoteFields = [
+        { input: quoteForm.email, error: document.getElementById('email-error'), isValid: isValidEmail },
+        { input: quoteForm.phone, error: document.getElementById('phoneError'), isValid: isValidPhone },
+        { input: quoteForm.zipCode, error: document.getElementById('zipError'), isValid: isValidZip },
+        { input: quoteForm.dob, error: document.getElementById('dobError'), isValid: isValidDob }
+    ];
+    attachFieldValidation(quoteFields);
+    attachPhoneFormatting(quoteForm.phone);
+    attachDateFormatting(quoteForm.dob);
 
-        if (response.ok && result.success) {
-            alert('Your quote request has been submitted successfully!');
-            e.target.reset();
-        } else {
-            alert(`Submission Error: ${result.message || 'Please try again.'}`);
+    quoteForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!validateFields(quoteFields)) return;
+
+        const submitBtn = quoteForm.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerText = messages[currentLang].sending;
+
+        const payload = {
+            name: `${quoteForm.firstName.value.trim()} ${quoteForm.lastName.value.trim()}`,
+            email: quoteForm.email.value.trim(),
+            phone: quoteForm.phone.value.trim(),
+            zipCode: quoteForm.zipCode.value.trim(),
+            dob: quoteForm.dob.value.trim(),
+            income: quoteForm.income.value.trim(),
+            referralSource: quoteForm.referralSource.value,
+            details: quoteForm.details.value.trim(),
+            // Saved as proof of what the person agreed to
+            tcpaConsent: quoteForm.tcpaConsent.checked,
+            consentText: document.querySelector('.consent-text:not([hidden])').innerText.trim(),
+            website: quoteForm.website.value
+        };
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/submit-form`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                alert(messages[currentLang].success);
+                quoteForm.reset();
+            } else {
+                alert(messages[currentLang].error(result.message));
+            }
+        } catch (error) {
+            console.error('Network Error:', error);
+            alert(messages[currentLang].network);
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerText = messages[currentLang].submit;
         }
-    } catch (error) {
-        console.error('Network Error:', error);
-        alert('Server unreachable. Please verify backend service is active.');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerText = 'Get My Quote';
-    }
-});
+    });
     </script>
 </body>
 </html>
