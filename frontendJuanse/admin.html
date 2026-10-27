@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Keep the admin page out of search results -->
+    <meta name="robots" content="noindex, nofollow">
+    <title>Admin Dashboard | Dalbagni Insurance</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="quote.css">
+    <!-- Fonts: Work Sans (body, subheads) and Unbounded (H1s) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400&family=Work+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+    <style>
+        .admin-login {
+            max-width: 440px;
+        }
+
+        .admin-error {
+            color: #e74c3c;
+            font-size: 0.9rem;
+            min-height: 1.2em;
+            margin: 0;
+        }
+
+        .quote-header h1 .welcome-name {
+            font-family: 'Unbounded', 'Work Sans', sans-serif;
+            color: #1d5288;
+            box-shadow: inset 0 -0.3em 0 rgba(244, 196, 48, 0.45);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .stat-card {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .stat-card.highlight {
+            background: linear-gradient(135deg, #0b2d52 0%, #1d5288 100%);
+            border: none;
+            color: #ffffff;
+        }
+
+        .stat-label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+
+        .stat-card.highlight .stat-label {
+            color: #f4c430;
+        }
+
+        .stat-value {
+            font-family: 'Unbounded', 'Work Sans', sans-serif;
+            font-size: 2.2rem;
+            color: #0b2d52;
+        }
+
+        .stat-card.highlight .stat-value {
+            color: #ffffff;
+        }
+
+        .dashboard-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-top: 28px;
+            flex-wrap: wrap;
+        }
+
+        .dashboard-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .password-form {
+            margin-top: 28px;
+            padding-top: 28px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .password-form h3 {
+            color: #0b2d52;
+            font-size: 1.2rem;
+        }
+
+        .password-form .submit-quote-btn {
+            padding: 10px 28px;
+            font-size: 0.95rem;
+        }
+
+        .password-hint {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin: 0;
+        }
+
+        .forgot-hint {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .admin-error.success {
+            color: #15803d;
+        }
+
+        .updated-at {
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+
+        .btn-outline {
+            background: none;
+            border: 2px solid #0b2d52;
+            color: #0b2d52;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 600;
+            padding: 10px 24px;
+            border-radius: 50px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .btn-outline:hover {
+            background-color: #0b2d52;
+            color: #ffffff;
+        }
+
+        @media screen and (max-width: 600px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-actions {
+                gap: 12px;
+            }
+
+            #logout-btn {
+                padding: 8px 16px;
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <img src="images/logo.png" alt="Dalbagni Insurance Logo">
+            </a>
+            <div class="nav-actions">
+                <button type="button" id="logout-btn" class="btn-outline" hidden>Log Out</button>
+                <a href="index.html" class="back-link">← Back to Home</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="quote-page-wrapper">
+
+        <!-- Login -->
+        <section id="login-view" class="quote-container admin-login">
+            <div class="quote-header">
+                <span class="subtitle">Staff Only</span>
+                <h1>Admin Login</h1>
+            </div>
+            <form id="login-form" class="quote-form">
+                <div class="form-group">
+                    <label for="admin-password">Password</label>
+                    <input type="password" id="admin-password" autocomplete="current-password" required>
+                </div>
+                <p id="login-error" class="admin-error" role="alert"></p>
+                <button type="submit" class="submit-quote-btn">Log In</button>
+            </form>
+            <p class="password-hint forgot-hint">Forgot your password? Contact your website administrator to reset it.</p>
+        </section>
+
+        <!-- Dashboard -->
+        <section id="dashboard-view" class="quote-container" hidden>
+            <div class="quote-header">
+                <span class="subtitle" id="greeting">Welcome Back</span>
+                <h1>Welcome, <span class="welcome-name">Juan Dalbagni</span></h1>
+                <p>Here's how the website is doing.</p>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-label">Page Views</span>
+                    <span class="stat-value" id="stat-pageviews">–</span>
+                </div>
+                <div class="stat-card highlight">
+                    <span class="stat-label">Total Leads</span>
+                    <span class="stat-value" id="stat-total">–</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Quote Requests</span>
+                    <span class="stat-value" id="stat-quotes">–</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Contact Inquiries</span>
+                    <span class="stat-value" id="stat-contacts">–</span>
+                </div>
+            </div>
+            <div class="dashboard-actions">
+                <span class="updated-at" id="updated-at"></span>
+                <div class="dashboard-buttons">
+                    <button type="button" id="show-password-btn" class="btn-outline">Change Password</button>
+                    <button type="button" id="refresh-btn" class="btn-outline">Refresh</button>
+                </div>
+            </div>
+
+            <!-- Change password -->
+            <form id="password-form" class="quote-form password-form" hidden>
+                <h3>Change Password</h3>
+                <div class="form-group">
+                    <label for="current-password">Current Password</label>
+                    <input type="password" id="current-password" autocomplete="current-password" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="new-password">New Password</label>
+                        <input type="password" id="new-password" autocomplete="new-password" minlength="12" maxlength="128" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm-password">Confirm New Password</label>
+                        <input type="password" id="confirm-password" autocomplete="new-password" required>
+                    </div>
+                </div>
+                <p class="password-hint">At least 12 characters. A short phrase is easy to remember and hard to guess.</p>
+                <p id="password-message" class="admin-error" role="alert"></p>
+                <div class="dashboard-buttons">
+                    <button type="button" id="cancel-password-btn" class="btn-outline">Cancel</button>
+                    <button type="submit" class="submit-quote-btn">Save Password</button>
+                </div>
+            </form>
+        </section>
+
+    </main>
+
+    <script src="config.js"></script>
+    <script>
+        // The password is kept only for this browser tab (cleared when the tab closes or on Log Out).
+        // The backend checks it on every request, so nothing here is trusted on its own.
+        const STORAGE_KEY = 'dalbagni-admin-password';
+
+        const loginView = document.getElementById('login-view');
+        const dashboardView = document.getElementById('dashboard-view');
+        const loginForm = document.getElementById('login-form');
+        const passwordInput = document.getElementById('admin-password');
+        const loginError = document.getElementById('login-error');
+        const logoutBtn = document.getElementById('logout-btn');
+        const refreshBtn = document.getElementById('refresh-btn');
+
+        function getSavedPassword() {
+            try { return sessionStorage.getItem(STORAGE_KEY); } catch { return null; }
+        }
+
+        function savePassword(password) {
+            try { sessionStorage.setItem(STORAGE_KEY, password); } catch { /* storage blocked: stay logged in until reload */ }
+        }
+
+        function clearPassword() {
+            try { sessionStorage.removeItem(STORAGE_KEY); } catch { /* nothing saved */ }
+        }
+
+        function showLogin(message = '') {
+            dashboardView.hidden = true;
+            logoutBtn.hidden = true;
+            loginView.hidden = false;
+            loginError.textContent = message;
+            passwordInput.value = '';
+            passwordInput.focus();
+        }
+
+        function showDashboard(stats) {
+            const format = (n) => Number(n || 0).toLocaleString('en-US');
+            document.getElementById('stat-pageviews').textContent = format(stats.total_pageviews);
+            document.getElementById('stat-total').textContent = format(stats.total_conversions);
+            document.getElementById('stat-quotes').textContent = format(stats.quote_requests);
+            document.getElementById('stat-contacts').textContent = format(stats.contact_inquiries);
+            const hour = new Date().getHours();
+            document.getElementById('greeting').textContent =
+                hour < 12 ? 'Good Morning' : hour < 18 ? 'Good Afternoon' : 'Good Evening';
+            document.getElementById('updated-at').textContent = `Updated ${new Date().toLocaleTimeString('en-US')}`;
+
+            loginView.hidden = true;
+            dashboardView.hidden = false;
+            logoutBtn.hidden = false;
+        }
+
+        // Returns the stats, or throws an Error whose message is safe to show
+        async function fetchStats(password) {
+            let response;
+            try {
+                response = await fetch(`${API_BASE_URL}/api/admin/stats`, {
+                    headers: { 'Authorization': `Bearer ${password}` }
+                });
+            } catch {
+                throw new Error('Could not reach the server. Is the backend running?');
+            }
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || !data.success) {
+                const error = new Error(data.message || 'Something went wrong. Please try again.');
+                error.status = response.status;
+                throw error;
+            }
+            return data;
+        }
+
+        async function loadDashboard(password) {
+            try {
+                const stats = await fetchStats(password);
+                savePassword(password);
+                showDashboard(stats);
+            } catch (error) {
+                if (error.status === 401 || error.status === 429) clearPassword();
+                showLogin(error.message);
+            }
+        }
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitBtn = loginForm.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Checking...';
+            await loadDashboard(passwordInput.value);
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Log In';
+        });
+
+        refreshBtn.addEventListener('click', async () => {
+            const password = getSavedPassword();
+            if (!password) return showLogin('Please log in again.');
+            refreshBtn.disabled = true;
+            await loadDashboard(password);
+            refreshBtn.disabled = false;
+        });
+
+        logoutBtn.addEventListener('click', () => {
+            clearPassword();
+            hidePasswordForm();
+            showLogin();
+        });
+
+        // ---------- Change password ----------
+        const passwordForm = document.getElementById('password-form');
+        const passwordMessage = document.getElementById('password-message');
+        const showPasswordBtn = document.getElementById('show-password-btn');
+
+        function setPasswordMessage(text, isSuccess = false) {
+            passwordMessage.textContent = text;
+            passwordMessage.classList.toggle('success', isSuccess);
+        }
+
+        function hidePasswordForm() {
+            passwordForm.reset();
+            passwordForm.hidden = true;
+            showPasswordBtn.hidden = false;
+        }
+
+        showPasswordBtn.addEventListener('click', () => {
+            setPasswordMessage('');
+            passwordForm.hidden = false;
+            showPasswordBtn.hidden = true;
+            document.getElementById('current-password').focus();
+        });
+
+        document.getElementById('cancel-password-btn').addEventListener('click', () => {
+            hidePasswordForm();
+            setPasswordMessage('');
+        });
+
+        passwordForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const current = document.getElementById('current-password').value;
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+
+            if (newPassword.length < 12) return setPasswordMessage('New password must be at least 12 characters.');
+            if (newPassword !== confirmPassword) return setPasswordMessage("The new passwords don't match.");
+
+            const saveBtn = passwordForm.querySelector('button[type="submit"]');
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/change-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${current}` },
+                    body: JSON.stringify({ newPassword })
+                });
+                const data = await response.json().catch(() => ({}));
+                if (response.ok && data.success) {
+                    savePassword(newPassword);
+                    hidePasswordForm();
+                    setPasswordMessage('');
+                    document.getElementById('updated-at').textContent = 'Password updated. Use your new password next time you log in.';
+                } else if (response.status === 401) {
+                    setPasswordMessage('Your current password is incorrect.');
+                } else {
+                    setPasswordMessage(data.message || 'Something went wrong. Please try again.');
+                }
+            } catch {
+                setPasswordMessage('Could not reach the server. Is the backend running?');
+            }
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Save Password';
+        });
+
+        const saved = getSavedPassword();
+        if (saved) loadDashboard(saved);
+        else passwordInput.focus();
+    </script>
+</body>
+</html>

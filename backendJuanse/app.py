@@ -13,6 +13,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from werkzeug.security import generate_password_hash, check_password_hash
 from pymongo import MongoClient
 from dotenv import load_dotenv
 
@@ -32,7 +33,7 @@ mongo_uri = os.getenv("MONGO_URI")
 email_user = os.getenv("EMAIL_USER")
 email_pass = os.getenv("EMAIL_PASS")
 notification_email = os.getenv("NOTIFICATION_EMAIL")
-admin_token = os.getenv("ADMIN_TOKEN")
+admin_password = os.getenv("ADMIN_PASSWORD")
 
 if not mongo_uri:
     raise RuntimeError("MONGO_URI is missing from .env")
@@ -42,6 +43,7 @@ db_client = MongoClient(mongo_uri, tlsCAFile=certifi.where(), serverSelectionTim
 db = db_client["dalbagni_db"]
 submissions_collection = db["submissions"]
 analytics_collection = db["analytics"]
+settings_collection = db["settings"]
 try:
     db_client.admin.command("ping")
     print("Successfully connected to MongoDB Atlas!")
@@ -68,6 +70,13 @@ def rate_limited(bucket, limit, window_seconds):
             return True
         timestamps.append(now)
         return False
+
+def recent_request_count(bucket, window_seconds):
+    """How many requests this IP has made to `bucket` in the window, without recording a new one."""
+    key = (bucket, request.remote_addr)
+    now = time.monotonic()
+    with _request_log_lock:
+        return sum(1 for t in _request_log[key] if now - t <= window_seconds)
 
 def too_many_requests():
     return jsonify({"success": False, "message": "Too many requests. Please try again in a few minutes."}), 429
@@ -344,14 +353,74 @@ def track_view():
         print(f"Error tracking view: {e}")
         return jsonify({"success": False}), 500
 
-# Dashboard statistics. Requires the header "Authorization: Bearer <ADMIN_TOKEN from .env>".
+# ---------- Admin login ----------
+# The owner's password is stored hashed in MongoDB once they change it from admin.html,
+# so nobody (including whoever runs the server) can read it.
+# ADMIN_PASSWORD in .env is the recovery password: it always works, so if the owner forgets
+# theirs, the site administrator can log in with it and set a new one.
+# After 5 wrong passwords from one IP, that IP is locked out for 15 minutes.
+ADMIN_MAX_FAILURES = 5
+ADMIN_LOCKOUT_SECONDS = 900
+ADMIN_PASSWORD_MIN_LENGTH = 12
+
+def is_correct_admin_password(supplied):
+    if hmac.compare_digest(supplied.encode(), admin_password.encode()):
+        return True
+    try:
+        saved = settings_collection.find_one({"_id": "admin_password"})
+    except Exception as e:
+        print(f"Error reading admin password: {e}")
+        return False
+    return bool(saved) and check_password_hash(saved["hash"], supplied)
+
+def check_admin_auth():
+    """Returns (supplied password, None) if the request has a correct admin password,
+    otherwise (None, error response)."""
+    if not admin_password:
+        return None, (jsonify({"success": False, "message": "Admin access is not configured."}), 503)
+    if recent_request_count("admin-failure", ADMIN_LOCKOUT_SECONDS) >= ADMIN_MAX_FAILURES:
+        return None, (jsonify({"success": False, "message": "Too many wrong passwords. Try again in 15 minutes."}), 429)
+
+    supplied = request.headers.get("Authorization", "").removeprefix("Bearer ")
+    if not supplied or not is_correct_admin_password(supplied):
+        rate_limited("admin-failure", ADMIN_MAX_FAILURES, ADMIN_LOCKOUT_SECONDS)  # records the failure
+        return None, (jsonify({"success": False, "message": "Incorrect password."}), 401)
+    return supplied, None
+
+# Requires the header "Authorization: Bearer <current password>" and JSON {"newPassword": "..."}.
+@app.route('/api/admin/change-password', methods=['POST'])
+def change_admin_password():
+    current, error = check_admin_auth()
+    if error:
+        return error
+
+    new_password = (request.get_json(silent=True) or {}).get("newPassword")
+    if not isinstance(new_password, str) or not ADMIN_PASSWORD_MIN_LENGTH <= len(new_password) <= 128:
+        return jsonify({"success": False, "message": f"New password must be {ADMIN_PASSWORD_MIN_LENGTH} to 128 characters."}), 400
+    if new_password != new_password.strip():
+        return jsonify({"success": False, "message": "New password can't start or end with a space."}), 400
+    if new_password == current:
+        return jsonify({"success": False, "message": "New password must be different from the current one."}), 400
+    if hmac.compare_digest(new_password.encode(), admin_password.encode()):
+        return jsonify({"success": False, "message": "Please choose a different password."}), 400
+
+    try:
+        settings_collection.update_one(
+            {"_id": "admin_password"},
+            {"$set": {"hash": generate_password_hash(new_password), "updatedAt": datetime.now(timezone.utc)}},
+            upsert=True
+        )
+        return jsonify({"success": True, "message": "Password updated."}), 200
+    except Exception as e:
+        print(f"Error saving admin password: {e}")
+        return jsonify({"success": False, "message": "Could not save the new password."}), 500
+
+# Dashboard statistics for admin.html. Requires the header "Authorization: Bearer <password>".
 @app.route('/api/admin/stats', methods=['GET'])
 def get_dashboard_stats():
-    if not admin_token:
-        return jsonify({"success": False, "message": "Admin access is not configured."}), 503
-    supplied = request.headers.get("Authorization", "").removeprefix("Bearer ").strip()
-    if not hmac.compare_digest(supplied, admin_token):
-        return jsonify({"success": False, "message": "Unauthorized"}), 401
+    _, error = check_admin_auth()
+    if error:
+        return error
 
     try:
         # Fetch pageviews
