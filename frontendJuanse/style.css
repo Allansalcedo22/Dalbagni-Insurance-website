@@ -674,7 +674,8 @@ text-decoration: none;
 /* Contact Us Section Layout */
 .contact-section {
 padding: 90px 20px;
-background-color: #f4f7fa;
+/* Same navy gradient as the hero, so the page opens and closes in brand colors */
+background: linear-gradient(135deg, #0b2d52 0%, #1d5288 100%);
 }
 
 .contact-container {
@@ -692,12 +693,16 @@ height: 100%;
 max-height: 520px;
 object-fit: cover;
 border-radius: 12px;
+display: block;
+/* White frame + shadow so the light photo reads as a card, not a box cut out of the navy */
+border: 6px solid #ffffff;
+box-shadow: 0 18px 40px rgba(0, 0, 0, 0.3);
 }
 
 .contact-info .section-subtitle {
 font-size: 0.85rem;
 font-weight: 700;
-color: #1d5288;
+color: #f4c430;
 letter-spacing: 2px;
 display: block;
 margin-bottom: 12px;
@@ -706,7 +711,7 @@ margin-bottom: 12px;
 .contact-info h2 {
 font-family: Georgia, 'Times New Roman', serif;
 font-size: 1.8rem;
-color: #0b2d52;
+color: #ffffff;
 line-height: 1.35;
 margin-bottom: 30px;
 }
@@ -721,22 +726,27 @@ gap: 18px;
 display: flex;
 align-items: center;
 gap: 14px;
-color: #1d5288;
+color: #f4c430;
 }
 
 .info-item a {
 font-size: 1.1rem;
 font-weight: 600;
-color: #0b2d52;
+color: #e2e8f0;
 text-decoration: none;
+transition: color 0.2s ease;
+}
+
+.info-item a:hover {
+color: #ffffff;
 }
 
 .contact-form-card {
 background-color: #ffffff;
 border-radius: 16px;
 padding: 35px 30px;
-box-shadow: 0 12px 35px rgba(11, 45, 82, 0.08);
-border: 1px solid #e2e8f0;
+box-shadow: 0 20px 45px rgba(0, 0, 0, 0.3);
+border: none;
 }
 
 .contact-form-card h3 {
@@ -818,8 +828,9 @@ margin-top: 8px;
 }
 /* Main Footer Structure */
 .site-footer {
-background-color: #0b2d52;
-color: #ffffff;
+background-color: #ffffff;
+color: #0b2d52;
+border-top: 1px solid #e2e8f0;
 padding: 60px 20px 20px 20px;
 font-family: 'Plus Jakarta Sans', sans-serif;
 }
@@ -828,31 +839,37 @@ font-family: 'Plus Jakarta Sans', sans-serif;
 max-width: 1200px;
 margin: 0 auto;
 display: grid;
-grid-template-columns: 1.3fr 0.8fr 1.1fr 0.8fr;
-gap: 30px;
+/* Logo + blurb on the left, links and contact pushed to the right */
+grid-template-columns: 1fr auto auto;
+gap: 30px 80px;
 align-items: start; /* Keeps column headers aligned at the top */
 padding-bottom: 40px;
-border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+border-bottom: 1px solid #e2e8f0;
 }
 
 .footer-logo {
-font-family: Georgia, 'Times New Roman', serif;
-font-size: 1.5rem;
-color: #ffffff;
+display: block;
+width: 260px;
+max-width: 100%;
+height: auto;
 margin-bottom: 15px;
 }
 
 .footer-about p {
-color: #cbd5e1;
+max-width: 360px;
+color: #475569;
 font-size: 0.95rem;
 line-height: 1.6;
 }
 
 .footer-col h4 {
 font-size: 1.1rem;
-color: #f4c430; /* Accent Gold */
+color: #0b2d52;
 margin-bottom: 20px;
 font-weight: 600;
+padding-bottom: 8px;
+border-bottom: 3px solid #f4c430; /* Accent Gold */
+display: inline-block;
 }
 
 .footer-links, .footer-contact {
@@ -866,14 +883,14 @@ margin-bottom: 12px;
 }
 
 .footer-links a {
-color: #e2e8f0;
+color: #334155;
 text-decoration: none;
 font-size: 0.95rem;
 transition: color 0.3s ease, padding-left 0.3s ease;
 }
 
 .footer-links a:hover {
-color: #f4c430;
+color: #1d5288;
 padding-left: 5px;
 }
 
@@ -882,37 +899,19 @@ display: flex;
 align-items: flex-start;
 gap: 12px;
 margin-bottom: 14px;
-color: #e2e8f0;
+color: #334155;
 font-size: 0.95rem;
 line-height: 1.5;
 }
 
 .footer-contact a {
-color: #e2e8f0;
+color: #334155;
 text-decoration: none;
 transition: color 0.3s ease;
 }
 
 .footer-contact a:hover {
-color: #f4c430;
-}
-
-/* Far-Right Standalone Logo */
-.footer-logo-col {
-display: flex;
-justify-content: flex-end;
-align-items: center;
-height: 100%;
-}
-
-.footer-right-logo {
-max-width: 250px;
-height: 150px;
-display: block;
-background: transparent;
-border: none;
-box-shadow: none;
-filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.25));
+color: #1d5288;
 }
 
 /* Footer Bottom Bar */
@@ -921,7 +920,7 @@ max-width: 1200px;
 margin: 0 auto;
 padding-top: 20px;
 text-align: center;
-color: #94a3b8;
+color: #64748b;
 font-size: 0.85rem;
 }
 
@@ -932,8 +931,8 @@ grid-template-columns: 1fr 1fr;
 gap: 35px;
 }
 
-.footer-logo-col {
-justify-content: flex-start;
+.footer-about {
+grid-column: 1 / -1;
 }
 }
 
