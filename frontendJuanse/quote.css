@@ -1,8 +1,7 @@
 /* Quote Page Styles (loaded after style.css) */
 
-/* style.css sets a system font on every element with `*`, so the page font has to be applied the same way */
 body, body * {
-font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+font-family: 'Work Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 body {
@@ -62,7 +61,7 @@ margin-bottom: 32px;
 .quote-header .subtitle {
 display: block;
 font-size: 0.85rem;
-font-weight: 700;
+font-weight: 600;
 color: #1d5288;
 text-transform: uppercase;
 letter-spacing: 2px;
@@ -70,8 +69,8 @@ margin-bottom: 8px;
 }
 
 .quote-header h1 {
-font-family: Georgia, 'Times New Roman', serif;
-font-size: 2.2rem;
+font-family: 'Unbounded', 'Work Sans', sans-serif;
+font-size: 2rem;
 font-weight: 400;
 color: #0b2d52;
 margin-bottom: 12px;
