@@ -202,15 +202,68 @@ padding: 0 20px;
 text-align: center;
 }
 
+.solutions-section .section-subtitle {
+font-size: 0.85rem;
+color: #1d5288;
+text-transform: uppercase;
+letter-spacing: 2px;
+display: block;
+margin-bottom: 10px;
+}
+
 .solutions-section h2 {
 font-family: Georgia, 'Times New Roman', serif;
 font-size: 2.1rem;
 font-weight: 400;
 color: #1A1A1A;
-margin-bottom: 45px;
+margin-bottom: 14px;
 max-width: 850px;
 margin-left: auto;
 margin-right: auto;
+}
+
+.solutions-intro {
+font-size: 1.05rem;
+color: #64748b;
+line-height: 1.6;
+max-width: 640px;
+margin: 0 auto 20px;
+}
+
+/* "Licensed in 33+ states" line */
+.states-badge {
+display: inline-flex;
+align-items: center;
+gap: 10px;
+color: #0b2d52;
+font-size: 1.2rem;
+margin-bottom: 40px;
+}
+
+.states-badge svg {
+color: #f4c430;
+flex-shrink: 0;
+}
+
+@media screen and (max-width: 600px) {
+.states-badge {
+font-size: 1rem;
+}
+}
+
+.solutions-cta {
+margin-top: 45px;
+}
+
+.solutions-cta p {
+font-size: 1.1rem;
+color: #334155;
+line-height: 1.6;
+margin-bottom: 20px;
+}
+
+.solutions-cta strong {
+color: #0b2d52;
 }
 
 .cards-grid {
@@ -252,15 +305,6 @@ margin-bottom: 12px;
 font-size: 0.9rem;
 color: #555555;
 line-height: 1.5;
-margin-bottom: 25px;
-min-height: 50px;
-}
-
-.card-link {
-color: #0056B3;
-font-weight: 700;
-font-size: 0.9rem;
-text-decoration: underline;
 }
 
 /* About Section - Modern Gradient & Shapes */
