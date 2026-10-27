@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Keep the admin page out of search results -->
     <meta name="robots" content="noindex, nofollow">
+    <!-- Don't leak the reset link to other sites -->
+    <meta name="referrer" content="no-referrer">
     <title>Admin Dashboard | Dalbagni Insurance</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="quote.css">
@@ -114,7 +116,13 @@
 
         .forgot-hint {
             text-align: center;
-            margin-top: 20px;
+            font-size: 0.9rem;
+            margin: 20px 0 0;
+        }
+
+        .forgot-hint a {
+            color: #1d5288;
+            font-weight: 600;
         }
 
         .admin-error.success {
@@ -190,7 +198,43 @@
                 <p id="login-error" class="admin-error" role="alert"></p>
                 <button type="submit" class="submit-quote-btn">Log In</button>
             </form>
-            <p class="password-hint forgot-hint">Forgot your password? Contact your website administrator to reset it.</p>
+            <p class="forgot-hint"><a href="#" id="forgot-link">Forgot password?</a></p>
+        </section>
+
+        <!-- Forgot password: emails the owner a reset link -->
+        <section id="forgot-view" class="quote-container admin-login" hidden>
+            <div class="quote-header">
+                <span class="subtitle">Staff Only</span>
+                <h1>Forgot Password</h1>
+                <p>We'll email a link to the owner's email address so you can choose a new password.</p>
+            </div>
+            <div class="quote-form">
+                <p id="forgot-message" class="admin-error" role="alert"></p>
+                <button type="button" id="send-reset-btn" class="submit-quote-btn">Send Reset Link</button>
+            </div>
+            <p class="forgot-hint"><a href="#" class="back-to-login">Back to login</a></p>
+        </section>
+
+        <!-- Reset password: opened from the emailed link (admin.html?reset=...) -->
+        <section id="reset-view" class="quote-container admin-login" hidden>
+            <div class="quote-header">
+                <span class="subtitle">Staff Only</span>
+                <h1>New Password</h1>
+            </div>
+            <form id="reset-form" class="quote-form">
+                <div class="form-group">
+                    <label for="reset-new-password">New Password</label>
+                    <input type="password" id="reset-new-password" autocomplete="new-password" minlength="12" maxlength="128" required>
+                </div>
+                <div class="form-group">
+                    <label for="reset-confirm-password">Confirm New Password</label>
+                    <input type="password" id="reset-confirm-password" autocomplete="new-password" required>
+                </div>
+                <p class="password-hint">At least 12 characters. A short phrase is easy to remember and hard to guess.</p>
+                <p id="reset-message" class="admin-error" role="alert"></p>
+                <button type="submit" class="submit-quote-btn">Save New Password</button>
+            </form>
+            <p class="forgot-hint"><a href="#" class="back-to-login">Back to login</a></p>
         </section>
 
         <!-- Dashboard -->
@@ -280,11 +324,18 @@
             try { sessionStorage.removeItem(STORAGE_KEY); } catch { /* nothing saved */ }
         }
 
-        function showLogin(message = '') {
-            dashboardView.hidden = true;
-            logoutBtn.hidden = true;
-            loginView.hidden = false;
+        // Shows one of the login / forgot / reset / dashboard cards
+        function showView(view) {
+            for (const section of document.querySelectorAll('main > section')) {
+                section.hidden = section !== view;
+            }
+            logoutBtn.hidden = view !== dashboardView;
+        }
+
+        function showLogin(message = '', isSuccess = false) {
+            showView(loginView);
             loginError.textContent = message;
+            loginError.classList.toggle('success', isSuccess);
             passwordInput.value = '';
             passwordInput.focus();
         }
@@ -300,9 +351,7 @@
                 hour < 12 ? 'Good Morning' : hour < 18 ? 'Good Afternoon' : 'Good Evening';
             document.getElementById('updated-at').textContent = `Updated ${new Date().toLocaleTimeString('en-US')}`;
 
-            loginView.hidden = true;
-            dashboardView.hidden = false;
-            logoutBtn.hidden = false;
+            showView(dashboardView);
         }
 
         // Returns the stats, or throws an Error whose message is safe to show
@@ -423,9 +472,102 @@
             saveBtn.textContent = 'Save Password';
         });
 
+        // ---------- Forgot password ----------
+        const forgotView = document.getElementById('forgot-view');
+        const forgotMessage = document.getElementById('forgot-message');
+        const sendResetBtn = document.getElementById('send-reset-btn');
+
+        document.getElementById('forgot-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            forgotMessage.textContent = '';
+            forgotMessage.classList.remove('success');
+            sendResetBtn.disabled = false;
+            showView(forgotView);
+        });
+
+        document.querySelectorAll('.back-to-login').forEach((link) => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                showLogin();
+            });
+        });
+
+        sendResetBtn.addEventListener('click', async () => {
+            sendResetBtn.disabled = true;
+            sendResetBtn.textContent = 'Sending...';
+            let sent = false;
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/forgot-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    // The emailed link comes back to this page
+                    body: JSON.stringify({ pageUrl: window.location.origin + window.location.pathname })
+                });
+                const data = await response.json().catch(() => ({}));
+                sent = response.ok && data.success;
+                forgotMessage.textContent = sent
+                    ? `${data.message} Check your inbox (and spam folder). The link expires in 30 minutes.`
+                    : (data.message || 'Something went wrong. Please try again.');
+            } catch {
+                forgotMessage.textContent = 'Could not reach the server. Is the backend running?';
+            }
+            forgotMessage.classList.toggle('success', sent);
+            sendResetBtn.textContent = 'Send Reset Link';
+            // Stay disabled after a successful send so it isn't clicked repeatedly
+            sendResetBtn.disabled = sent;
+        });
+
+        // ---------- Reset password (from the emailed link) ----------
+        const resetForm = document.getElementById('reset-form');
+        const resetMessage = document.getElementById('reset-message');
+        const resetToken = new URLSearchParams(window.location.search).get('reset');
+
+        if (resetToken) {
+            // Remove the token from the address bar and history
+            history.replaceState(null, '', window.location.pathname);
+        }
+
+        resetForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newPassword = document.getElementById('reset-new-password').value;
+            const confirmPassword = document.getElementById('reset-confirm-password').value;
+            resetMessage.classList.remove('success');
+
+            if (newPassword.length < 12) return (resetMessage.textContent = 'New password must be at least 12 characters.');
+            if (newPassword !== confirmPassword) return (resetMessage.textContent = "The new passwords don't match.");
+
+            const saveBtn = resetForm.querySelector('button[type="submit"]');
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/reset-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: resetToken, newPassword })
+                });
+                const data = await response.json().catch(() => ({}));
+                if (response.ok && data.success) {
+                    resetForm.reset();
+                    showLogin('Password updated. Log in with your new password.', true);
+                } else {
+                    resetMessage.textContent = data.message || 'Something went wrong. Please try again.';
+                }
+            } catch {
+                resetMessage.textContent = 'Could not reach the server. Is the backend running?';
+            }
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Save New Password';
+        });
+
         const saved = getSavedPassword();
-        if (saved) loadDashboard(saved);
-        else passwordInput.focus();
+        if (resetToken) {
+            showView(document.getElementById('reset-view'));
+            document.getElementById('reset-new-password').focus();
+        } else if (saved) {
+            loadDashboard(saved);
+        } else {
+            passwordInput.focus();
+        }
     </script>
 </body>
 </html>

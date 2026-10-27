@@ -2,6 +2,8 @@ import os
 import re
 import html
 import hmac
+import hashlib
+import secrets
 import time
 import certifi
 import smtplib
@@ -11,6 +13,7 @@ from datetime import date, datetime, timezone
 from string import Template
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from urllib.parse import urlsplit
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -34,6 +37,8 @@ email_user = os.getenv("EMAIL_USER")
 email_pass = os.getenv("EMAIL_PASS")
 notification_email = os.getenv("NOTIFICATION_EMAIL")
 admin_password = os.getenv("ADMIN_PASSWORD")
+# Where "Forgot password?" reset links are emailed (the site owner). Defaults to NOTIFICATION_EMAIL.
+admin_email = os.getenv("ADMIN_EMAIL") or notification_email
 
 if not mongo_uri:
     raise RuntimeError("MONGO_URI is missing from .env")
@@ -171,15 +176,36 @@ def render_rows(rows):
         )
     return "\n            ".join(parts)
 
+def send_email(to_address, subject, html_body):
+    """Sends an HTML email via Gmail SMTP. Returns True if it was sent."""
+    if not email_user or not email_pass or not to_address:
+        print("Email credentials or recipient missing in .env.")
+        return False
+
+    try:
+        msg = MIMEMultipart('alternative')
+        msg['From'] = email_user
+        msg['To'] = to_address
+        # Plain text header: no HTML escaping, and no line breaks (prevents header injection)
+        msg['Subject'] = clean_text(subject, 200)
+        msg.attach(MIMEText(html_body, 'html'))
+
+        with smtplib.SMTP('smtp.gmail.com', 587, timeout=20) as server:
+            server.starttls()
+            server.login(email_user, email_pass)
+            server.send_message(msg)
+
+        print(f"Email sent with subject: {msg['Subject']}")
+        return True
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+        return False
+
 def send_email_notification(subject, heading, sections):
-    """Fills email_template.html and sends it via Gmail SMTP.
+    """Fills email_template.html and emails it to NOTIFICATION_EMAIL.
 
     sections is a list of (section title, rows), where each row is (label, value, link prefix or None).
     """
-    if not email_user or not email_pass or not notification_email:
-        print("Email credentials or notification recipient missing in .env.")
-        return
-
     try:
         template_path = os.path.join(os.path.dirname(__file__), 'email_template.html')
         with open(template_path, 'r', encoding='utf-8') as file:
@@ -190,26 +216,14 @@ def send_email_notification(subject, heading, sections):
             for title, rows in sections
         )
         rendered_html = html_template.safe_substitute(heading=html.escape(heading), sections=sections_html)
-
-        msg = MIMEMultipart('alternative')
-        msg['From'] = email_user
-        msg['To'] = notification_email
-        # Plain text header: no HTML escaping, and no line breaks (prevents header injection)
-        msg['Subject'] = clean_text(subject, 200)
-        msg.attach(MIMEText(rendered_html, 'html'))
-
-        with smtplib.SMTP('smtp.gmail.com', 587, timeout=20) as server:
-            server.starttls()
-            server.login(email_user, email_pass)
-            server.send_message(msg)
-
-        print(f"Formatted HTML email sent with subject: {msg['Subject']}")
     except Exception as e:
-        print(f"Failed to send email notification: {e}")
+        print(f"Failed to build email notification: {e}")
+        return
+    send_email(notification_email, subject, rendered_html)
 
-def send_email_in_background(*args):
+def send_email_in_background(*args, target=send_email_notification):
     """Sends the email without making the visitor wait for Gmail."""
-    threading.Thread(target=send_email_notification, args=args, daemon=True).start()
+    threading.Thread(target=target, args=args, daemon=True).start()
 
 
 # ---------- Routes ----------
@@ -373,6 +387,23 @@ def is_correct_admin_password(supplied):
         return False
     return bool(saved) and check_password_hash(saved["hash"], supplied)
 
+def new_admin_password_error(new_password):
+    """Returns why new_password can't be used, or None if it's fine."""
+    if not isinstance(new_password, str) or not ADMIN_PASSWORD_MIN_LENGTH <= len(new_password) <= 128:
+        return f"New password must be {ADMIN_PASSWORD_MIN_LENGTH} to 128 characters."
+    if new_password != new_password.strip():
+        return "New password can't start or end with a space."
+    if admin_password and hmac.compare_digest(new_password.encode(), admin_password.encode()):
+        return "Please choose a different password."
+    return None
+
+def save_admin_password(new_password):
+    settings_collection.update_one(
+        {"_id": "admin_password"},
+        {"$set": {"hash": generate_password_hash(new_password), "updatedAt": datetime.now(timezone.utc)}},
+        upsert=True
+    )
+
 def check_admin_auth():
     """Returns (supplied password, None) if the request has a correct admin password,
     otherwise (None, error response)."""
@@ -395,24 +426,110 @@ def change_admin_password():
         return error
 
     new_password = (request.get_json(silent=True) or {}).get("newPassword")
-    if not isinstance(new_password, str) or not ADMIN_PASSWORD_MIN_LENGTH <= len(new_password) <= 128:
-        return jsonify({"success": False, "message": f"New password must be {ADMIN_PASSWORD_MIN_LENGTH} to 128 characters."}), 400
-    if new_password != new_password.strip():
-        return jsonify({"success": False, "message": "New password can't start or end with a space."}), 400
     if new_password == current:
         return jsonify({"success": False, "message": "New password must be different from the current one."}), 400
-    if hmac.compare_digest(new_password.encode(), admin_password.encode()):
-        return jsonify({"success": False, "message": "Please choose a different password."}), 400
+    password_error = new_admin_password_error(new_password)
+    if password_error:
+        return jsonify({"success": False, "message": password_error}), 400
 
     try:
-        settings_collection.update_one(
-            {"_id": "admin_password"},
-            {"$set": {"hash": generate_password_hash(new_password), "updatedAt": datetime.now(timezone.utc)}},
-            upsert=True
-        )
+        save_admin_password(new_password)
         return jsonify({"success": True, "message": "Password updated."}), 200
     except Exception as e:
         print(f"Error saving admin password: {e}")
+        return jsonify({"success": False, "message": "Could not save the new password."}), 500
+
+# ---------- Forgot password ----------
+# "Forgot password?" emails the owner a one-time link that expires after 30 minutes.
+# Only a hash of the link's token is stored, and the link only ever points at one of ALLOWED_ORIGINS.
+RESET_LINK_MINUTES = 30
+RESET_PATH_RE = re.compile(r"^/[A-Za-z0-9_\-./]*$")
+
+def hash_reset_token(token):
+    return hashlib.sha256(token.encode()).hexdigest()
+
+def build_reset_link(page_url, token):
+    """Returns page_url?reset=token if page_url is on an allowed origin, else None."""
+    try:
+        parts = urlsplit(page_url)
+    except ValueError:
+        return None
+    origin = f"{parts.scheme}://{parts.netloc}"
+    if origin not in allowed_origins or not RESET_PATH_RE.match(parts.path or "/"):
+        return None
+    return f"{origin}{parts.path}?reset={token}"
+
+def send_reset_email(link):
+    safe_link = html.escape(link, quote=True)
+    body = f"""<!DOCTYPE html>
+<html><body style="font-family: Helvetica, Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 20px;">
+  <div style="max-width: 520px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden;">
+    <div style="background: #0b2d52; color: #ffffff; padding: 24px; text-align: center;">
+      <h2 style="margin: 0; font-size: 20px;">Reset Your Admin Password</h2>
+    </div>
+    <div style="padding: 28px; color: #333333; font-size: 15px; line-height: 1.6;">
+      <p>Someone asked to reset the password for the Dalbagni Health admin dashboard.</p>
+      <p style="text-align: center; margin: 28px 0;">
+        <a href="{safe_link}" style="background: #f4c430; color: #0b2d52; padding: 14px 28px; border-radius: 50px; text-decoration: none; font-weight: bold;">Choose a New Password</a>
+      </p>
+      <p>This link works once and expires in {RESET_LINK_MINUTES} minutes.</p>
+      <p style="color: #6c757d; font-size: 13px;">If you didn't ask for this, you can ignore this email. Your password won't change.</p>
+    </div>
+  </div>
+</body></html>"""
+    send_email(admin_email, "Reset your Dalbagni Health admin password", body)
+
+# Requires JSON {"pageUrl": "<the admin page's address>"}; the link in the email points there.
+@app.route('/api/admin/forgot-password', methods=['POST'])
+def forgot_admin_password():
+    if rate_limited("admin-forgot", limit=3, window_seconds=3600):
+        return jsonify({"success": False, "message": "Too many reset requests. Please try again in an hour."}), 429
+    if not (email_user and email_pass and admin_email):
+        return jsonify({"success": False, "message": "Password reset by email isn't set up yet."}), 503
+
+    token = secrets.token_urlsafe(32)
+    link = build_reset_link((request.get_json(silent=True) or {}).get("pageUrl") or "", token)
+    if not link:
+        return jsonify({"success": False, "message": "Invalid request."}), 400
+
+    try:
+        # A new request replaces any earlier link
+        settings_collection.update_one(
+            {"_id": "admin_reset"},
+            {"$set": {"tokenHash": hash_reset_token(token), "expiresAt": time.time() + RESET_LINK_MINUTES * 60}},
+            upsert=True
+        )
+    except Exception as e:
+        print(f"Error saving reset token: {e}")
+        return jsonify({"success": False, "message": "Could not send the reset email. Please try again."}), 500
+
+    send_email_in_background(link, target=send_reset_email)
+    return jsonify({"success": True, "message": "We've emailed a reset link to the owner's email address."}), 200
+
+# Requires JSON {"token": "<from the emailed link>", "newPassword": "..."}.
+@app.route('/api/admin/reset-password', methods=['POST'])
+def reset_admin_password():
+    if rate_limited("admin-reset", limit=10, window_seconds=900):
+        return too_many_requests()
+
+    data = request.get_json(silent=True) or {}
+    token = data.get("token")
+    new_password = data.get("newPassword")
+    if not isinstance(token, str) or not token or len(token) > 100:
+        return jsonify({"success": False, "message": "This reset link is invalid or has expired."}), 400
+    password_error = new_admin_password_error(new_password)
+    if password_error:
+        return jsonify({"success": False, "message": password_error}), 400
+
+    try:
+        # Deleting while matching makes the link single-use, even if clicked twice at once
+        reset = settings_collection.find_one_and_delete({"_id": "admin_reset", "tokenHash": hash_reset_token(token)})
+        if not reset or reset.get("expiresAt", 0) < time.time():
+            return jsonify({"success": False, "message": "This reset link is invalid or has expired."}), 400
+        save_admin_password(new_password)
+        return jsonify({"success": True, "message": "Password updated."}), 200
+    except Exception as e:
+        print(f"Error resetting admin password: {e}")
         return jsonify({"success": False, "message": "Could not save the new password."}), 500
 
 # Dashboard statistics for admin.html. Requires the header "Authorization: Bearer <password>".
