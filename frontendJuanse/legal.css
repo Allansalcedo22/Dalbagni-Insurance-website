@@ -1,0 +1,78 @@
+/* Privacy Policy and Terms pages (loaded after style.css and quote.css) */
+
+.legal-container {
+max-width: 820px;
+margin: 0 auto;
+background-color: #ffffff;
+border-radius: 16px;
+padding: 48px;
+box-shadow: 0 12px 35px rgba(11, 45, 82, 0.08);
+border: 1px solid #e2e8f0;
+}
+
+.legal-container h1 {
+font-family: 'Unbounded', 'Work Sans', sans-serif;
+font-size: 2rem;
+font-weight: 400;
+color: #0b2d52;
+margin-bottom: 8px;
+}
+
+.legal-updated {
+font-size: 0.9rem;
+color: #64748b;
+margin-bottom: 28px;
+}
+
+.legal-container h2 {
+font-size: 1.2rem;
+font-weight: 600;
+color: #0b2d52;
+margin: 32px 0 10px;
+}
+
+.legal-container p,
+.legal-container li {
+font-size: 0.98rem;
+line-height: 1.7;
+color: #334155;
+}
+
+.legal-container p {
+margin-bottom: 12px;
+}
+
+.legal-container ul {
+padding-left: 22px;
+margin-bottom: 12px;
+}
+
+.legal-container li {
+margin-bottom: 6px;
+}
+
+.legal-container a {
+color: #1d5288;
+font-weight: 600;
+}
+
+.legal-contact {
+background-color: #f8fafc;
+border: 1px solid #e2e8f0;
+border-radius: 10px;
+padding: 16px 20px;
+}
+
+.legal-contact p {
+margin-bottom: 4px;
+}
+
+@media screen and (max-width: 768px) {
+.legal-container {
+padding: 28px 20px;
+}
+
+.legal-container h1 {
+font-size: 1.6rem;
+}
+}

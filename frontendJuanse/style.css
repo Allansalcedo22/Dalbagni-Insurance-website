@@ -140,7 +140,7 @@ color: #ffffff;
 /* "Welcome to Dalbagni Health" line above the hero heading */
 .welcome-text {
 display: block;
-font-size: 1.3rem;
+font-size: 1.9rem;
 font-weight: 600;
 letter-spacing: 0.5px;
 color: #ffffff;
@@ -955,6 +955,21 @@ padding-top: 20px;
 text-align: center;
 color: #64748b;
 font-size: 0.85rem;
+}
+
+.footer-legal {
+margin-top: 6px;
+}
+
+.footer-legal a {
+color: #64748b;
+text-decoration: none;
+margin: 0 6px;
+}
+
+.footer-legal a:hover {
+color: #1d5288;
+text-decoration: underline;
 }
 
 /* Clean Responsive Breakpoints */
