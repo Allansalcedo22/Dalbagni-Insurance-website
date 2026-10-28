@@ -1,0 +1,61 @@
+# Render Blueprint: creates the backend and the website from this repo.
+# Secrets marked "sync: false" are typed into the Render dashboard, never committed.
+services:
+  # Flask backend, served at https://api.dalbagnihealth.com
+  - type: web
+    name: dalbagni-api
+    runtime: python
+    plan: starter
+    rootDir: backendJuanse
+    buildCommand: pip install -r requirements.txt
+    # One worker keeps the in-memory rate limits and login lockouts in one place
+    startCommand: gunicorn app:app --workers 1 --threads 4 --timeout 60 --bind 0.0.0.0:$PORT
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.14.7"
+      - key: FLASK_DEBUG
+        value: "0"
+      - key: TRUSTED_PROXY_HOPS
+        value: "1"
+      - key: ALLOWED_ORIGINS
+        value: https://dalbagnihealth.com,https://www.dalbagnihealth.com
+      - key: MONGO_URI
+        sync: false
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+      - key: NOTIFICATION_EMAIL
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+
+  # Website pages, served at https://dalbagnihealth.com
+  - type: web
+    name: dalbagni-site
+    runtime: static
+    rootDir: frontendJuanse
+    buildCommand: ""
+    staticPublishPath: ./
+    autoDeploy: true
+    routes:
+      - type: rewrite
+        source: /admin
+        destination: /admin.html
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Strict-Transport-Security
+        value: max-age=31536000

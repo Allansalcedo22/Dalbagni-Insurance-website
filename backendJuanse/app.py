@@ -17,6 +17,7 @@ from urllib.parse import urlsplit
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.middleware.proxy_fix import ProxyFix
 from pymongo import MongoClient
 from bson import ObjectId
 from dotenv import load_dotenv
@@ -26,6 +27,13 @@ load_dotenv()
 app = Flask(__name__)
 # Reject request bodies over 16 KB (the forms send well under 4 KB)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024
+
+# On a host like Render every request arrives through the host's proxy, so request.remote_addr
+# would be the proxy for every visitor. TRUSTED_PROXY_HOPS=1 reads the real visitor IP from the
+# proxy's X-Forwarded-For header instead. Leave it at 0 locally, where there is no proxy.
+trusted_proxy_hops = int(os.getenv("TRUSTED_PROXY_HOPS", "0"))
+if trusted_proxy_hops:
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=trusted_proxy_hops, x_proto=trusted_proxy_hops)
 
 # Only these sites may call the API from a browser. Set ALLOWED_ORIGINS in .env
 # to a comma-separated list, e.g. https://dalbagnihealth.com,https://www.dalbagnihealth.com
@@ -658,6 +666,11 @@ def get_lead(lead_id):
     lead["id"] = lead.pop("_id")
     lead["submittedAt"] = to_json_value(submitted_at(doc))
     return jsonify({"success": True, "lead": lead}), 200
+
+# The host pings this to check the server is up
+@app.route('/api/health', methods=['GET'])
+def health():
+    return jsonify({"status": "ok"}), 200
 
 @app.errorhandler(413)
 def payload_too_large(_error):

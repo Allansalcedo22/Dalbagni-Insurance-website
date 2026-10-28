@@ -1,0 +1,8 @@
+# Secrets (backendJuanse/.gitignore covers these too; this protects the whole repo)
+.env
+*.env
+
+# macOS and Python leftovers
+.DS_Store
+__pycache__/
+venv/
