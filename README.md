@@ -1,6 +1,6 @@
-# Dalbagni Insurance - Full-Stack Quote & Lead Management System
+# Dalbagni Health - Full-Stack Quote & Lead Management System
 
-A full-stack web application designed for Dalbagni Insurance to collect, manage, and process customer quote requests in real time. Features a dynamic front-end form coupled with a modern Python/Flask REST API, cloud database storage, and automated email notifications.
+A full-stack web application designed for Dalbagni Health to collect, manage, and process customer quote requests in real time. Features a dynamic front-end form coupled with a modern Python/Flask REST API, cloud database storage, and automated email notifications.
 
 ---
 
