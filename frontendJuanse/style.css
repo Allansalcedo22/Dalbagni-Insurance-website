@@ -137,6 +137,18 @@ margin: 0 auto;
 color: #ffffff;
 }
 
+/* "Welcome to Dalbagni Health" line above the hero heading */
+.welcome-text {
+display: block;
+font-size: 1.3rem;
+font-weight: 600;
+letter-spacing: 0.5px;
+color: #ffffff;
+opacity: 0.9;
+margin-bottom: 12px;
+text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
 /* Gold "+5 Years" at the start of the hero heading */
 .hero-years {
 color: #f4c430;
@@ -1023,6 +1035,11 @@ width: 100%;
 margin: 0;
 text-align: center;
 padding-left: 25px;
+}
+
+.welcome-text {
+font-size: 1.1rem;
+margin-bottom: 10px;
 }
 
 .curved-hero-content h1 {
