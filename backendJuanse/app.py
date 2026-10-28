@@ -18,6 +18,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 from pymongo import MongoClient
+from bson import ObjectId
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -558,6 +559,105 @@ def get_dashboard_stats():
     except Exception as e:
         print(f"Error fetching stats: {e}")
         return jsonify({"success": False, "message": "Could not load stats."}), 500
+
+# ---------- Leads (admin.html search) ----------
+LEADS_PER_PAGE = 20
+LEAD_TYPES = {"quote": "Quote Request", "contact": "Contact Inquiry"}
+
+def to_json_value(value):
+    """Makes MongoDB values JSON-friendly (ObjectIds become strings, dates become ISO 8601 in UTC)."""
+    if isinstance(value, ObjectId):
+        return str(value)
+    if isinstance(value, datetime):
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=timezone.utc)  # MongoDB returns UTC without a timezone
+        return value.isoformat()
+    if isinstance(value, dict):
+        return {k: to_json_value(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [to_json_value(v) for v in value]
+    return value
+
+def submitted_at(doc):
+    # Older submissions may not have submittedAt; an ObjectId records when the document was created
+    return doc.get("submittedAt") or doc["_id"].generation_time
+
+def leads_search_filter(query, lead_type):
+    conditions = []
+    if lead_type in LEAD_TYPES:
+        conditions.append({"formType": LEAD_TYPES[lead_type]})
+    if query:
+        text = re.escape(query)
+        fields = [{"name": {"$regex": text, "$options": "i"}}, {"email": {"$regex": text, "$options": "i"}}]
+        digits = re.sub(r"\D", "", query)
+        if len(digits) >= 3:
+            # Match phone numbers however they're formatted: "9542430108" finds "(954) 243-0108"
+            fields.append({"phone": {"$regex": r"\D*".join(digits)}})
+        conditions.append({"$or": fields})
+    return {"$and": conditions} if conditions else {}
+
+# Lists submissions, newest first. Query string: q (name, email or phone), type (quote/contact), page.
+@app.route('/api/admin/leads', methods=['GET'])
+def list_leads():
+    _, error = check_admin_auth()
+    if error:
+        return error
+
+    query = clean_text(request.args.get("q"), 100)
+    lead_type = request.args.get("type", "")
+    try:
+        page = max(1, min(int(request.args.get("page", "1")), 10000))
+    except ValueError:
+        page = 1
+
+    try:
+        search = leads_search_filter(query, lead_type)
+        total = submissions_collection.count_documents(search)
+        docs = (submissions_collection
+                .find(search, {"name": 1, "email": 1, "phone": 1, "formType": 1, "submittedAt": 1})
+                .sort("_id", -1)
+                .skip((page - 1) * LEADS_PER_PAGE)
+                .limit(LEADS_PER_PAGE))
+        leads = [{
+            "id": str(doc["_id"]),
+            "submittedAt": to_json_value(submitted_at(doc)),
+            "formType": doc.get("formType", ""),
+            "name": doc.get("name", ""),
+            "email": doc.get("email", ""),
+            "phone": doc.get("phone", ""),
+        } for doc in docs]
+        return jsonify({
+            "success": True,
+            "leads": leads,
+            "total": total,
+            "page": page,
+            "pages": max(1, -(-total // LEADS_PER_PAGE)),
+        }), 200
+    except Exception as e:
+        print(f"Error listing leads: {e}")
+        return jsonify({"success": False, "message": "Could not load leads."}), 500
+
+# Everything saved for one submission.
+@app.route('/api/admin/leads/<lead_id>', methods=['GET'])
+def get_lead(lead_id):
+    _, error = check_admin_auth()
+    if error:
+        return error
+    if not ObjectId.is_valid(lead_id):
+        return jsonify({"success": False, "message": "Lead not found."}), 404
+
+    try:
+        doc = submissions_collection.find_one({"_id": ObjectId(lead_id)})
+    except Exception as e:
+        print(f"Error loading lead: {e}")
+        return jsonify({"success": False, "message": "Could not load this lead."}), 500
+    if not doc:
+        return jsonify({"success": False, "message": "Lead not found."}), 404
+
+    lead = to_json_value(doc)
+    lead["id"] = lead.pop("_id")
+    lead["submittedAt"] = to_json_value(submitted_at(doc))
+    return jsonify({"success": True, "lead": lead}), 200
 
 @app.errorhandler(413)
 def payload_too_large(_error):

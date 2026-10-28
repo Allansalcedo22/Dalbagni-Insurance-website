@@ -17,6 +17,11 @@
     <link rel="icon" type="image/png" href="images/favicon.png">
     <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
     <style>
+        /* quote.css sets display on forms and buttons, which would otherwise override the hidden attribute */
+        [hidden] {
+            display: none !important;
+        }
+
         .admin-login {
             max-width: 440px;
         }
@@ -150,6 +155,244 @@
         .btn-outline:hover {
             background-color: #0b2d52;
             color: #ffffff;
+        }
+
+        /* Leads */
+        .leads-section {
+            margin-top: 28px;
+            padding-top: 28px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .leads-title {
+            font-size: 1.4rem;
+            color: #0b2d52;
+            margin-bottom: 16px;
+        }
+
+        .leads-search {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 12px;
+        }
+
+        .leads-search input,
+        .leads-search select {
+            font-family: inherit;
+            font-size: 0.95rem;
+            padding: 12px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 50px;
+            background-color: #ffffff;
+            outline: none;
+        }
+
+        .leads-search input:focus,
+        .leads-search select:focus {
+            border-color: #1d5288;
+            box-shadow: 0 0 0 3px rgba(29, 82, 136, 0.15);
+        }
+
+        .leads-status {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin: 14px 0 8px;
+        }
+
+        .leads-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .lead-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 4px 16px;
+            width: 100%;
+            text-align: left;
+            font-family: inherit;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 14px 18px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .lead-row:hover,
+        .lead-row:focus-visible {
+            border-color: #1d5288;
+            box-shadow: 0 4px 14px rgba(11, 45, 82, 0.08);
+            outline: none;
+        }
+
+        .lead-row-name {
+            font-weight: 600;
+            color: #0b2d52;
+            font-size: 1rem;
+        }
+
+        .lead-row-contact {
+            grid-column: 1 / -1;
+            font-size: 0.85rem;
+            color: #64748b;
+            overflow-wrap: anywhere;
+        }
+
+        .lead-row-meta {
+            font-size: 0.8rem;
+            color: #64748b;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .lead-badge {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 3px 10px;
+            border-radius: 50px;
+            background-color: #e8f0f9;
+            color: #1d5288;
+        }
+
+        .lead-badge.quote {
+            background-color: #fdf3d3;
+            color: #8a6500;
+        }
+
+        .leads-pager {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+
+        .leads-pager button:disabled {
+            opacity: 0.4;
+            cursor: default;
+            background: none;
+            color: #0b2d52;
+        }
+
+        /* Lead details pop-up */
+        .lead-dialog {
+            width: min(600px, calc(100% - 32px));
+            max-height: calc(100% - 64px);
+            margin: auto; /* style.css resets margins, which would pin the pop-up to the top-left */
+            border: none;
+            border-radius: 16px;
+            padding: 0;
+            box-shadow: 0 20px 50px rgba(11, 45, 82, 0.25);
+        }
+
+        .lead-dialog::backdrop {
+            background: rgba(11, 45, 82, 0.45);
+        }
+
+        .lead-dialog-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 24px 28px 16px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .lead-dialog-header h2 {
+            font-size: 1.4rem;
+            color: #0b2d52;
+            margin: 8px 0 4px;
+            overflow-wrap: anywhere;
+        }
+
+        .lead-date {
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+
+        .lead-close {
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            line-height: 1;
+            color: #64748b;
+            cursor: pointer;
+            padding: 0 4px;
+        }
+
+        .lead-close:hover {
+            color: #0b2d52;
+        }
+
+        .lead-body {
+            padding: 8px 28px 28px;
+        }
+
+        .lead-body h3 {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #64748b;
+            margin: 20px 0 8px;
+        }
+
+        .lead-body dl {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 8px 16px;
+            margin: 0;
+            font-size: 0.95rem;
+        }
+
+        .lead-body dt {
+            color: #64748b;
+        }
+
+        .lead-body dd {
+            margin: 0;
+            color: #0f172a;
+            overflow-wrap: anywhere;
+            white-space: pre-wrap;
+        }
+
+        .lead-body a {
+            color: #1d5288;
+            font-weight: 600;
+        }
+
+        .lead-consent-text {
+            font-size: 0.8rem;
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        @media screen and (max-width: 600px) {
+            .leads-search {
+                grid-template-columns: 1fr;
+            }
+
+            .lead-body dl {
+                grid-template-columns: 1fr;
+                gap: 2px;
+            }
+
+            .lead-body dd {
+                margin-bottom: 8px;
+            }
+
+            .lead-dialog-header,
+            .lead-body {
+                padding-left: 20px;
+                padding-right: 20px;
+            }
         }
 
         @media screen and (max-width: 600px) {
@@ -294,9 +537,42 @@
                     <button type="submit" class="submit-quote-btn">Save Password</button>
                 </div>
             </form>
+
+            <!-- Leads: search past submissions -->
+            <div class="leads-section">
+                <h2 class="leads-title">Leads</h2>
+                <form id="leads-search" class="leads-search" role="search">
+                    <input type="search" id="leads-query" placeholder="Search by name, email or phone" aria-label="Search leads" maxlength="100">
+                    <select id="leads-type" aria-label="Lead type">
+                        <option value="">All leads</option>
+                        <option value="quote">Quote requests</option>
+                        <option value="contact">Contact inquiries</option>
+                    </select>
+                </form>
+                <p id="leads-status" class="leads-status" role="status"></p>
+                <ul id="leads-list" class="leads-list"></ul>
+                <div id="leads-pager" class="leads-pager" hidden>
+                    <button type="button" id="leads-prev" class="btn-outline">← Newer</button>
+                    <span id="leads-page"></span>
+                    <button type="button" id="leads-next" class="btn-outline">Older →</button>
+                </div>
+            </div>
         </section>
 
     </main>
+
+    <!-- One lead's full submission -->
+    <dialog id="lead-dialog" class="lead-dialog" aria-labelledby="lead-name">
+        <div class="lead-dialog-header">
+            <div>
+                <span class="lead-badge" id="lead-type"></span>
+                <h2 id="lead-name"></h2>
+                <span class="lead-date" id="lead-date"></span>
+            </div>
+            <button type="button" class="lead-close" id="lead-close" aria-label="Close">×</button>
+        </div>
+        <div id="lead-body" class="lead-body"></div>
+    </dialog>
 
     <script src="config.js"></script>
     <script>
@@ -354,11 +630,11 @@
             showView(dashboardView);
         }
 
-        // Returns the stats, or throws an Error whose message is safe to show
-        async function fetchStats(password) {
+        // GETs an admin API path. Returns the JSON, or throws an Error whose message is safe to show.
+        async function adminGet(path, password) {
             let response;
             try {
-                response = await fetch(`${API_BASE_URL}/api/admin/stats`, {
+                response = await fetch(`${API_BASE_URL}${path}`, {
                     headers: { 'Authorization': `Bearer ${password}` }
                 });
             } catch {
@@ -375,9 +651,10 @@
 
         async function loadDashboard(password) {
             try {
-                const stats = await fetchStats(password);
+                const stats = await adminGet('/api/admin/stats', password);
                 savePassword(password);
                 showDashboard(stats);
+                loadLeads();
             } catch (error) {
                 if (error.status === 401 || error.status === 429) clearPassword();
                 showLogin(error.message);
@@ -405,6 +682,7 @@
         logoutBtn.addEventListener('click', () => {
             clearPassword();
             hidePasswordForm();
+            clearLeads();
             showLogin();
         });
 
@@ -558,6 +836,194 @@
             saveBtn.disabled = false;
             saveBtn.textContent = 'Save New Password';
         });
+
+        // ---------- Leads ----------
+        // Everything a visitor typed is shown with textContent, never innerHTML, so it can't run as code here.
+        const leadsQuery = document.getElementById('leads-query');
+        const leadsType = document.getElementById('leads-type');
+        const leadsStatus = document.getElementById('leads-status');
+        const leadsList = document.getElementById('leads-list');
+        const leadsPager = document.getElementById('leads-pager');
+        const leadsPrev = document.getElementById('leads-prev');
+        const leadsNext = document.getElementById('leads-next');
+        const leadDialog = document.getElementById('lead-dialog');
+        const leadBody = document.getElementById('lead-body');
+        let leadsPage = 1;
+        let leadsRequest = 0; // ignore responses to searches that were replaced by a newer one
+
+        function el(tag, className, text) {
+            const node = document.createElement(tag);
+            if (className) node.className = className;
+            if (text !== undefined) node.textContent = text;
+            return node;
+        }
+
+        function formatDate(iso, withTime = false) {
+            const date = new Date(iso);
+            if (isNaN(date)) return '';
+            const options = { month: 'short', day: 'numeric', year: 'numeric' };
+            if (withTime) Object.assign(options, { hour: 'numeric', minute: '2-digit' });
+            return date.toLocaleString('en-US', options);
+        }
+
+        function typeBadge(formType) {
+            const isQuote = formType === 'Quote Request';
+            return el('span', `lead-badge${isQuote ? ' quote' : ''}`, isQuote ? 'Quote' : formType === 'Contact Inquiry' ? 'Contact' : (formType || 'Lead'));
+        }
+
+        // Handles an error from adminGet: a rejected password sends you back to login
+        function handleAdminError(error, statusElement) {
+            if (error.status === 401 || error.status === 429) {
+                clearPassword();
+                clearLeads();
+                showLogin(error.message);
+            } else {
+                statusElement.textContent = error.message;
+            }
+        }
+
+        function clearLeads() {
+            leadsList.replaceChildren();
+            leadsStatus.textContent = '';
+            leadsPager.hidden = true;
+            leadsQuery.value = '';
+            leadsType.value = '';
+            leadsPage = 1;
+            if (leadDialog.open) leadDialog.close();
+        }
+
+        async function loadLeads(page = 1) {
+            const password = getSavedPassword();
+            if (!password) return;
+            const requestId = ++leadsRequest;
+            leadsStatus.textContent = 'Loading...';
+
+            const params = new URLSearchParams({ q: leadsQuery.value.trim(), type: leadsType.value, page });
+            try {
+                const data = await adminGet(`/api/admin/leads?${params}`, password);
+                if (requestId !== leadsRequest) return;
+                leadsPage = data.page;
+                renderLeads(data);
+            } catch (error) {
+                if (requestId === leadsRequest) handleAdminError(error, leadsStatus);
+            }
+        }
+
+        function renderLeads({ leads, total, page, pages }) {
+            leadsList.replaceChildren();
+            const searching = leadsQuery.value.trim() || leadsType.value;
+            if (total === 0) {
+                leadsStatus.textContent = searching ? 'No leads match your search.' : 'No leads yet.';
+            } else {
+                const first = (page - 1) * 20 + 1;
+                leadsStatus.textContent = `Showing ${first}–${first + leads.length - 1} of ${total.toLocaleString('en-US')} ${total === 1 ? 'lead' : 'leads'}`;
+            }
+
+            for (const lead of leads) {
+                const row = el('button', 'lead-row');
+                row.type = 'button';
+                row.append(
+                    el('span', 'lead-row-name', lead.name || '(no name)'),
+                    el('span', 'lead-row-meta', formatDate(lead.submittedAt)),
+                    el('span', 'lead-row-contact', [lead.phone, lead.email].filter(Boolean).join('  ·  '))
+                );
+                row.querySelector('.lead-row-meta').prepend(typeBadge(lead.formType), ' ');
+                row.addEventListener('click', () => openLead(lead.id));
+                const item = el('li');
+                item.append(row);
+                leadsList.append(item);
+            }
+
+            leadsPager.hidden = pages <= 1;
+            leadsPrev.disabled = page <= 1;
+            leadsNext.disabled = page >= pages;
+            document.getElementById('leads-page').textContent = `Page ${page} of ${pages}`;
+        }
+
+        // Adds a label/value pair to a <dl>. href makes the value a link (tel:/mailto:).
+        function addField(list, label, value, href) {
+            if (value === undefined || value === null || value === '') return;
+            const dd = el('dd');
+            if (href) {
+                const link = el('a', '', value);
+                link.href = href;
+                dd.append(link);
+            } else {
+                dd.textContent = value;
+            }
+            list.append(el('dt', '', label), dd);
+        }
+
+        function addSection(title, fields) {
+            const list = el('dl');
+            for (const [label, value, href] of fields) addField(list, label, value, href);
+            if (!list.children.length) return;
+            leadBody.append(el('h3', '', title), list);
+        }
+
+        async function openLead(id) {
+            const password = getSavedPassword();
+            if (!password) return showLogin('Please log in again.');
+            try {
+                const { lead } = await adminGet(`/api/admin/leads/${encodeURIComponent(id)}`, password);
+                showLead(lead);
+            } catch (error) {
+                handleAdminError(error, leadsStatus);
+            }
+        }
+
+        function showLead(lead) {
+            document.getElementById('lead-type').replaceWith(Object.assign(typeBadge(lead.formType), { id: 'lead-type' }));
+            document.getElementById('lead-name').textContent = lead.name || '(no name)';
+            document.getElementById('lead-date').textContent = `Submitted ${formatDate(lead.submittedAt, true)}`;
+            leadBody.replaceChildren();
+
+            const phoneDigits = String(lead.phone || '').replace(/\D/g, '');
+            addSection('Contact', [
+                ['Phone', lead.phone, phoneDigits ? `tel:+1${phoneDigits.slice(-10)}` : null],
+                ['Email', lead.email, lead.email ? `mailto:${lead.email}` : null],
+            ]);
+            addSection('Details', [
+                ['Needs help with', lead.service],
+                ['ZIP code', lead.zipCode],
+                ['Date of birth', lead.dob],
+                ['Household income', lead.income],
+                ['Heard about us', lead.referralSource],
+                ['Notes', lead.details],
+            ]);
+
+            const consent = lead.consent;
+            if (consent && typeof consent === 'object') {
+                addSection('Consent to be contacted', [
+                    ['Agreed', consent.agreed ? 'Yes' : 'No'],
+                    ['When', formatDate(consent.submittedAt, true)],
+                    ['IP address', consent.ipAddress],
+                ]);
+                if (consent.text) leadBody.append(el('p', 'lead-consent-text', consent.text));
+            }
+
+            leadDialog.showModal();
+        }
+
+        document.getElementById('lead-close').addEventListener('click', () => leadDialog.close());
+        // Clicking the dark area outside the pop-up closes it
+        leadDialog.addEventListener('click', (e) => {
+            if (e.target === leadDialog) leadDialog.close();
+        });
+
+        let searchTimer;
+        leadsQuery.addEventListener('input', () => {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => loadLeads(1), 300);
+        });
+        document.getElementById('leads-search').addEventListener('submit', (e) => {
+            e.preventDefault();
+            clearTimeout(searchTimer);
+            loadLeads(1);
+        });
+        leadsType.addEventListener('change', () => loadLeads(1));
+        leadsPrev.addEventListener('click', () => loadLeads(leadsPage - 1));
+        leadsNext.addEventListener('click', () => loadLeads(leadsPage + 1));
 
         const saved = getSavedPassword();
         if (resetToken) {
