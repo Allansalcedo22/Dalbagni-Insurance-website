@@ -28,7 +28,7 @@ app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024
 
 # Only these sites may call the API from a browser. Set ALLOWED_ORIGINS in .env
-# to a comma-separated list, e.g. https://dalbagniinsurance.com,https://www.dalbagniinsurance.com
+# to a comma-separated list, e.g. https://dalbagnihealth.com,https://www.dalbagnihealth.com
 default_origins = "http://127.0.0.1:5502,http://localhost:5502,http://127.0.0.1:5500,http://localhost:5500,http://localhost:8765"
 allowed_origins = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", default_origins).split(",") if o.strip()]
 CORS(app, origins=allowed_origins)
