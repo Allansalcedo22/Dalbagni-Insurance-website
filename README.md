@@ -35,5 +35,5 @@ A full-stack web application designed for Dalbagni Health to collect, manage, an
 
 1. **Clone the Repository:**
    ```bash
-   git clone [https://github.com/your-username/dalbagni-insurance.code](https://github.com/your-username/dalbagni-insurance.code)
-   cd dalbagni-insurance/backendJuanse
+   git clone https://github.com/your-username/dalbagni-health.git
+   cd dalbagni-health/backendJuanse
