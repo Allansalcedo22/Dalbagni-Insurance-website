@@ -726,6 +726,26 @@ def get_lead(lead_id):
     lead["submittedAt"] = to_json_value(submitted_at(doc))
     return jsonify({"success": True, "lead": lead}), 200
 
+# Permanently removes one lead (e.g. a practice submission). There is no undo.
+@app.route('/api/admin/leads/<lead_id>', methods=['DELETE'])
+def delete_lead(lead_id):
+    _, error = check_admin_auth()
+    if error:
+        return error
+    if not ObjectId.is_valid(lead_id):
+        return jsonify({"success": False, "message": "Lead not found."}), 404
+
+    try:
+        result = submissions_collection.delete_one({"_id": ObjectId(lead_id)})
+    except Exception as e:
+        print(f"Error deleting lead: {e}")
+        return jsonify({"success": False, "message": "Could not delete this lead."}), 500
+    if not result.deleted_count:
+        return jsonify({"success": False, "message": "Lead not found."}), 404
+
+    print(f"Admin deleted lead {lead_id}")
+    return jsonify({"success": True}), 200
+
 # The host pings this to check the server is up
 @app.route('/api/health', methods=['GET'])
 def health():

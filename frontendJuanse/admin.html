@@ -348,6 +348,43 @@
             color: #0b2d52;
         }
 
+        .lead-dialog-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 12px;
+            padding: 16px 24px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .lead-delete-status {
+            font-size: 0.85rem;
+            color: #842029;
+        }
+
+        .btn-danger {
+            background: none;
+            border: 2px solid #c0392b;
+            color: #c0392b;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 8px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background-color: #c0392b;
+            color: #ffffff;
+        }
+
+        .btn-danger:disabled {
+            opacity: 0.6;
+            cursor: default;
+        }
+
         .lead-body {
             padding: 8px 28px 28px;
         }
@@ -589,6 +626,10 @@
             <button type="button" class="lead-close" id="lead-close" aria-label="Close">×</button>
         </div>
         <div id="lead-body" class="lead-body"></div>
+        <div class="lead-dialog-footer">
+            <span class="lead-delete-status" id="lead-delete-status" role="status"></span>
+            <button type="button" class="btn-danger" id="lead-delete">Delete Lead</button>
+        </div>
     </dialog>
 
     <script src="config.js"></script>
@@ -648,10 +689,11 @@
         }
 
         // GETs an admin API path. Returns the JSON, or throws an Error whose message is safe to show.
-        async function adminGet(path, password) {
+        async function adminRequest(path, password, method = 'GET') {
             let response;
             try {
                 response = await fetch(`${API_BASE_URL}${path}`, {
+                    method,
                     headers: { 'Authorization': `Bearer ${password}` }
                 });
             } catch {
@@ -668,7 +710,7 @@
 
         async function loadDashboard(password) {
             try {
-                const stats = await adminGet('/api/admin/stats', password);
+                const stats = await adminRequest('/api/admin/stats', password);
                 savePassword(password);
                 showDashboard(stats);
                 loadLeads();
@@ -894,7 +936,7 @@
             return el('span', `lead-badge${modifier}`, label);
         }
 
-        // Handles an error from adminGet: a rejected password sends you back to login
+        // Handles an error from adminRequest: a rejected password sends you back to login
         function handleAdminError(error, statusElement) {
             if (error.status === 401 || error.status === 429) {
                 clearPassword();
@@ -923,7 +965,7 @@
 
             const params = new URLSearchParams({ q: leadsQuery.value.trim(), type: leadsType.value, page });
             try {
-                const data = await adminGet(`/api/admin/leads?${params}`, password);
+                const data = await adminRequest(`/api/admin/leads?${params}`, password);
                 if (requestId !== leadsRequest) return;
                 leadsPage = data.page;
                 renderLeads(data);
@@ -988,14 +1030,21 @@
             const password = getSavedPassword();
             if (!password) return showLogin('Please log in again.');
             try {
-                const { lead } = await adminGet(`/api/admin/leads/${encodeURIComponent(id)}`, password);
+                const { lead } = await adminRequest(`/api/admin/leads/${encodeURIComponent(id)}`, password);
                 showLead(lead);
             } catch (error) {
                 handleAdminError(error, leadsStatus);
             }
         }
 
+        let shownLead = null;
+        const leadDeleteBtn = document.getElementById('lead-delete');
+        const leadDeleteStatus = document.getElementById('lead-delete-status');
+
         function showLead(lead) {
+            shownLead = lead;
+            leadDeleteStatus.textContent = '';
+            leadDeleteBtn.disabled = false;
             document.getElementById('lead-type').replaceWith(Object.assign(typeBadge(lead.formType), { id: 'lead-type' }));
             document.getElementById('lead-name').textContent = lead.name || '(no name)';
             document.getElementById('lead-date').textContent = `Submitted ${formatDate(lead.submittedAt, true)}`;
@@ -1043,6 +1092,29 @@
         }
 
         document.getElementById('lead-close').addEventListener('click', () => leadDialog.close());
+
+        leadDeleteBtn.addEventListener('click', async () => {
+            if (!shownLead) return;
+            const who = shownLead.name || 'this lead';
+            if (!confirm(`Permanently delete ${who}? This can't be undone.`)) return;
+
+            const password = getSavedPassword();
+            if (!password) return showLogin('Please log in again.');
+            leadDeleteBtn.disabled = true;
+            try {
+                await adminRequest(`/api/admin/leads/${encodeURIComponent(shownLead.id)}`, password, 'DELETE');
+                leadDialog.close();
+                showDashboard(await adminRequest('/api/admin/stats', password));
+                loadLeads(leadsPage);
+            } catch (error) {
+                if (error.status === 401 || error.status === 429) {
+                    leadDialog.close();
+                    return handleAdminError(error, leadsStatus);
+                }
+                leadDeleteStatus.textContent = error.message;
+                leadDeleteBtn.disabled = false;
+            }
+        });
         // Clicking the dark area outside the pop-up closes it
         leadDialog.addEventListener('click', (e) => {
             if (e.target === leadDialog) leadDialog.close();
