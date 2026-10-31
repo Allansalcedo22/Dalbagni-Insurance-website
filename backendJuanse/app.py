@@ -359,6 +359,65 @@ def handle_contact_submission():
         "message": "Message sent. Dalbagni Health will get back to you in the upcoming days."
     }), 200
 
+# Endpoint 3: Testimonial Form (index.html). Saved for Juan to review; nothing is published automatically.
+@app.route('/api/submit-testimonial', methods=['POST'])
+def handle_testimonial_submission():
+    if rate_limited("submit", limit=10, window_seconds=600):
+        return too_many_requests()
+
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"success": False, "message": "No data provided"}), 400
+    if is_spam(data):
+        return jsonify({"success": True, "message": "Thank you!"}), 200
+
+    name = clean_text(data.get("name"), 100)
+    email = clean_text(data.get("email"), 254)
+    message = clean_multiline(data.get("message"), 1000)
+    consent_text = clean_multiline(data.get("consentText"), 500)
+
+    errors = []
+    if not name:
+        errors.append("Name is required.")
+    if not is_valid_email(email):
+        errors.append("A valid email address is required.")
+    if len(message) < 10:
+        errors.append("Please write a few words about your experience.")
+    if data.get("publishConsent") is not True or not consent_text:
+        errors.append("Please agree to let us publish your testimonial.")
+    if errors:
+        return jsonify({"success": False, "message": " ".join(errors)}), 400
+
+    submission = {
+        "formType": "Testimonial",
+        "name": name,
+        "email": email,
+        "testimonial": message,
+        # Proof of permission to publish: what they agreed to, and when/where from
+        "publishConsent": {"agreed": True, "text": consent_text, **submission_metadata()},
+        **submission_metadata(),
+    }
+
+    try:
+        submissions_collection.insert_one(submission)
+    except Exception as e:
+        print(f"Error saving testimonial: {e}")
+        return jsonify({"success": False, "message": "We couldn't send your testimonial. Please try again."}), 500
+
+    send_email_in_background(
+        f"⭐ NEW TESTIMONIAL: {submission['name']}",
+        "New Testimonial Received",
+        [
+            ("From", [
+                ("Full Name", submission["name"], None),
+                ("Email Address", submission["email"], "mailto:"),
+            ]),
+            ("Testimonial", [("Their Words", submission["testimonial"], None)]),
+        ],
+    )
+
+    return jsonify({"success": True, "message": "Thank you for sharing your experience!"}), 200
+
 @app.route('/api/track-view', methods=['POST'])
 def track_view():
     # One counted view per IP per 30 minutes, so refreshing or scripting can't inflate the number
@@ -570,7 +629,7 @@ def get_dashboard_stats():
 
 # ---------- Leads (admin.html search) ----------
 LEADS_PER_PAGE = 20
-LEAD_TYPES = {"quote": "Quote Request", "contact": "Contact Inquiry"}
+LEAD_TYPES = {"quote": "Quote Request", "contact": "Contact Inquiry", "testimonial": "Testimonial"}
 
 def to_json_value(value):
     """Makes MongoDB values JSON-friendly (ObjectIds become strings, dates become ISO 8601 in UTC)."""

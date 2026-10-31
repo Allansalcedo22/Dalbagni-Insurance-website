@@ -211,64 +211,56 @@
     </div>
 </section>
 
-    <!-- Client Reviews Section -->
+    <!-- Testimonials Section
+         Real client testimonials only, shared with the client's permission (submitted through the form
+         below and saved in the admin dashboard). To publish one, add a card like this inside a
+         <div class="reviews-grid"> above the form:
+            <div class="review-card">
+                <div class="reviewer-info">
+                    <div class="avatar">M</div>
+                    <div><h4>Maria R.</h4></div>
+                </div>
+                <p>"Their exact words."</p>
+            </div>
+    -->
     <section id="reviews" class="reviews-section">
         <div class="reviews-container">
             <div class="google-rating-header">
                 <span class="section-subtitle" data-en="TESTIMONIALS" data-es="TESTIMONIOS">TESTIMONIALS</span>
-                <h2 data-en="What Our Clients Say" data-es="Lo que dicen nuestros clientes">What Our Clients Say</h2>
-                
-                <div class="google-score-box">
-                    <svg width="24" height="24" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
-                    <span class="score">5.0</span>
-                    <div class="stars">★★★★★</div>
-                    <span class="review-count" data-en="(Google Reviews)" data-es="(Reseñas de Google)">(Google Reviews)</span>
-                </div>
+                <h2 data-en="Share Your Experience" data-es="Comparta su experiencia">Share Your Experience</h2>
+                <p class="testimonial-intro" data-en="Did Dalbagni Health help you or your family find coverage? We'd love to hear about it." data-es="¿Dalbagni Health le ayudó a usted o a su familia a encontrar cobertura? Nos encantaría saberlo.">Did Dalbagni Health help you or your family find coverage? We'd love to hear about it.</p>
             </div>
 
-            <div class="reviews-grid">
-                <!-- Review 1 -->
-                <div class="review-card">
-                    <div class="reviewer-info">
-                        <div class="avatar">M</div>
-                        <div>
-                            <h4>Maria Rodriguez</h4>
-                            <span class="stars">★★★★★</span>
-                        </div>
+            <div class="contact-form-card testimonial-card">
+                <form id="testimonial-form" class="contact-form">
+                    <div class="form-group">
+                        <label for="testimonial-name" data-en="Full Name" data-es="Nombre Completo">Full Name</label>
+                        <input type="text" id="testimonial-name" name="name" maxlength="100" placeholder="John Doe" required>
                     </div>
-                    <p data-en='"Juan and his team at Dalbagni Health made finding health coverage so simple. They explained everything clearly in Spanish and helped me save money."' data-es='"Juan y su equipo en Dalbagni Health hicieron que encontrar cobertura de salud fuera muy sencillo. Me explicaron todo claramente en español y me ayudaron a ahorrar dinero."'>"Juan and his team at Dalbagni Health made finding health coverage so simple. They explained everything clearly in Spanish and helped me save money."</p>
-                    <span class="google-verified"><svg width="14" height="14" viewBox="0 0 24 24" fill="#4285F4"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg> Verified Google Review</span>
-                </div>
 
-                <!-- Review 2 -->
-                <div class="review-card">
-                    <div class="reviewer-info">
-                        <div class="avatar avatar-blue">C</div>
-                        <div>
-                            <h4>Carlos Mendez</h4>
-                            <span class="stars">★★★★★</span>
-                        </div>
+                    <div class="form-group">
+                        <label for="testimonial-email" data-en="Email (not published)" data-es="Correo Electrónico (no se publica)">Email (not published)</label>
+                        <input type="email" id="testimonial-email" name="email" maxlength="254" placeholder="example@email.com" required>
+                        <span id="testimonial-email-error" style="color: #e74c3c; font-size: 0.85rem; display: none;" data-en="Please enter a valid email address." data-es="Ingrese un correo electrónico válido.">Please enter a valid email address.</span>
                     </div>
-                    <p data-en='"Excellent customer service! They took the time to answer all my questions about Medicare plans. I highly recommend Dalbagni Health to anyone."' data-es='"¡Excelente servicio al cliente! Se tomaron el tiempo para responder todas mis preguntas sobre los planes de Medicare. Recomiendo Dalbagni Health a cualquiera."'>"Excellent customer service! They took the time to answer all my questions about Medicare plans. I highly recommend Dalbagni Health to anyone."</p>
-                    <span class="google-verified"><svg width="14" height="14" viewBox="0 0 24 24" fill="#4285F4"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg> Verified Google Review</span>
-                </div>
 
-                <!-- Review 3 -->
-                <div class="review-card">
-                    <div class="reviewer-info">
-                        <div class="avatar avatar-gold">S</div>
-                        <div>
-                            <h4>Sofia Garcia</h4>
-                            <span class="stars">★★★★★</span>
-                        </div>
+                    <div class="form-group">
+                        <label for="testimonial-message" data-en="Your Experience" data-es="Su Experiencia">Your Experience</label>
+                        <textarea id="testimonial-message" name="message" rows="5" minlength="10" maxlength="1000" required></textarea>
                     </div>
-                    <p data-en='"Very professional and trustworthy agency. They helped our whole family set up great coverage with complete peace of mind."' data-es='"Una agencia muy profesional y de confianza. Ayudaron a toda nuestra familia a contratar una excelente cobertura con total tranquilidad."'>"Very professional and trustworthy agency. They helped our whole family set up great coverage with complete peace of mind."</p>
-                    <span class="google-verified"><svg width="14" height="14" viewBox="0 0 24 24" fill="#4285F4"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg> Verified Google Review</span>
-                </div>
-            </div>
 
-            <div class="reviews-cta">
-                <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer" class="btn btn-google" data-en="Review Us on Google" data-es="Escríbanos una reseña en Google">Review Us on Google</a>
+                    <label class="testimonial-consent">
+                        <input type="checkbox" id="testimonial-consent" name="publishConsent" required>
+                        <span id="testimonial-consent-text" data-en="I agree that Dalbagni Health may publish my first name, last initial and this testimonial on its website." data-es="Acepto que Dalbagni Health publique mi nombre, la inicial de mi apellido y este testimonio en su sitio web.">I agree that Dalbagni Health may publish my first name, last initial and this testimonial on its website.</span>
+                    </label>
+
+                    <!-- Spam trap: hidden from people, bots tend to fill it in -->
+                    <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position: absolute; left: -9999px;">
+
+                    <button type="submit" id="testimonial-submit-btn" class="btn btn-submit" data-en="SUBMIT TESTIMONIAL" data-es="ENVIAR TESTIMONIO">SUBMIT TESTIMONIAL</button>
+
+                    <div id="testimonial-response-message" class="form-response" role="status"></div>
+                </form>
             </div>
         </div>
     </section>
@@ -424,7 +416,65 @@
                 submitBtn.innerText = isSpanish ? 'ENVIAR' : 'SEND';
             }
             });
-            
+
+    </script>
+
+    <!-- Testimonial Form Submission Handler -->
+    <script>
+        const testimonialForm = document.getElementById('testimonial-form');
+        const testimonialFields = [
+            { input: testimonialForm.email, error: document.getElementById('testimonial-email-error'), isValid: isValidEmail }
+        ];
+        attachFieldValidation(testimonialFields);
+
+        function showTestimonialMessage(text, isSuccess) {
+            const box = document.getElementById('testimonial-response-message');
+            box.className = `form-response ${isSuccess ? 'success' : 'error'}`;
+            box.textContent = text;
+        }
+
+        testimonialForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            if (!validateFields(testimonialFields)) return;
+
+            const submitBtn = document.getElementById('testimonial-submit-btn');
+            const isSpanish = currentLang === 'es';
+            submitBtn.disabled = true;
+            submitBtn.innerText = isSpanish ? 'Enviando...' : 'Sending...';
+
+            const payload = {
+                name: testimonialForm.name.value.trim(),
+                email: testimonialForm.email.value.trim(),
+                message: testimonialForm.message.value.trim(),
+                publishConsent: testimonialForm.publishConsent.checked,
+                // Save the exact wording they agreed to, as proof of permission to publish
+                consentText: document.getElementById('testimonial-consent-text').innerText.trim(),
+                website: testimonialForm.website.value
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/submit-testimonial`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                if (!response.ok || !result.success) throw new Error(result.message || 'Submission failed');
+
+                showTestimonialMessage(isSpanish
+                    ? '¡Gracias por compartir su experiencia con nosotros!'
+                    : 'Thank you for sharing your experience with us!', true);
+                testimonialForm.reset();
+            } catch (error) {
+                console.error('Testimonial Error:', error);
+                showTestimonialMessage(isSpanish
+                    ? 'No se pudo enviar su testimonio. Por favor intente de nuevo.'
+                    : 'Unable to send your testimonial. Please try again later.', false);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = isSpanish ? 'ENVIAR TESTIMONIO' : 'SUBMIT TESTIMONIAL';
+            }
+        });
     </script>
 
     <footer class="site-footer">
@@ -444,7 +494,7 @@
                 <li><a href="#home" data-en="Home" data-es="Inicio">Home</a></li>
                 <li><a href="#about-us" data-en="About Us" data-es="Nosotros">About Us</a></li>
                 <li><a href="quote.html" data-en="Free Quote" data-es="Cotización Gratis">Free Quote</a></li>
-                <li><a href="#reviews" data-en="Reviews" data-es="Reseñas">Reviews</a></li>
+                <li><a href="#reviews" data-en="Testimonials" data-es="Testimonios">Testimonials</a></li>
             </ul>
         </div>
 
