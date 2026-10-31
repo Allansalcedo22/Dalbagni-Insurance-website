@@ -240,7 +240,7 @@ def send_email_in_background(*args, target=send_email_notification):
 # Endpoint 1: Quote Form (quote.html)
 @app.route('/api/submit-form', methods=['POST'])
 def submit_form():
-    if rate_limited("submit", limit=5, window_seconds=600):
+    if rate_limited("submit", limit=10, window_seconds=600):
         return too_many_requests()
 
     data = request.get_json(silent=True)
@@ -312,7 +312,7 @@ SERVICE_LABELS = {
 
 @app.route('/api/submit-contact', methods=['POST'])
 def handle_contact_submission():
-    if rate_limited("submit", limit=5, window_seconds=600):
+    if rate_limited("submit", limit=10, window_seconds=600):
         return too_many_requests()
 
     data = request.get_json(silent=True)
