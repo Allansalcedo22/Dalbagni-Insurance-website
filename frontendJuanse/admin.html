@@ -157,6 +157,83 @@
             color: #ffffff;
         }
 
+        /* Testimonials */
+        .section-hint {
+            font-size: 0.9rem;
+            color: #64748b;
+            line-height: 1.5;
+            margin-bottom: 4px;
+        }
+
+        .testimonial-item {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px 18px;
+            margin-bottom: 10px;
+        }
+
+        .testimonial-item.is-published {
+            border-color: #86efac;
+            background-color: #f7fef9;
+        }
+
+        .testimonial-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .testimonial-item-name {
+            font-weight: 600;
+            color: #0b2d52;
+        }
+
+        .testimonial-item-meta {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .testimonial-item-text {
+            white-space: pre-line;
+            font-style: italic;
+            color: #334155;
+            line-height: 1.6;
+            margin: 10px 0 12px;
+            overflow-wrap: anywhere;
+        }
+
+        .testimonial-item-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .publish-state {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 3px 10px;
+            border-radius: 50px;
+            background-color: #f1f5f9;
+            color: #475569;
+        }
+
+        .is-published .publish-state {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .btn-publish {
+            font-size: 0.85rem;
+            padding: 8px 18px;
+        }
+
         /* Leads */
         .leads-section {
             margin-top: 28px;
@@ -591,6 +668,14 @@
                 </div>
             </form>
 
+            <!-- Testimonials: choose which ones appear on the homepage -->
+            <div class="leads-section">
+                <h2 class="leads-title">Testimonials</h2>
+                <p class="section-hint">Published testimonials appear on the homepage with the person's first name and last initial (for example, "Maria R."). Their email is never shown.</p>
+                <p class="leads-status" id="testimonials-status" role="status"></p>
+                <ul class="leads-list" id="testimonials-list"></ul>
+            </div>
+
             <!-- Leads: search past submissions -->
             <div class="leads-section">
                 <h2 class="leads-title">Leads</h2>
@@ -689,12 +774,15 @@
         }
 
         // GETs an admin API path. Returns the JSON, or throws an Error whose message is safe to show.
-        async function adminRequest(path, password, method = 'GET') {
+        async function adminRequest(path, password, method = 'GET', body) {
+            const headers = { 'Authorization': `Bearer ${password}` };
+            if (body !== undefined) headers['Content-Type'] = 'application/json';
             let response;
             try {
                 response = await fetch(`${API_BASE_URL}${path}`, {
                     method,
-                    headers: { 'Authorization': `Bearer ${password}` }
+                    headers,
+                    body: body === undefined ? undefined : JSON.stringify(body)
                 });
             } catch {
                 throw new Error('Could not reach the server. Is the backend running?');
@@ -714,6 +802,7 @@
                 savePassword(password);
                 showDashboard(stats);
                 loadLeads();
+                loadTestimonials();
             } catch (error) {
                 if (error.status === 401 || error.status === 429) clearPassword();
                 showLogin(error.message);
@@ -947,7 +1036,64 @@
             }
         }
 
+        const testimonialsList = document.getElementById('testimonials-list');
+        const testimonialsStatus = document.getElementById('testimonials-status');
+
+        async function loadTestimonials() {
+            const password = getSavedPassword();
+            if (!password) return;
+            try {
+                const { testimonials } = await adminRequest('/api/admin/testimonials', password);
+                renderTestimonials(testimonials);
+            } catch (error) {
+                handleAdminError(error, testimonialsStatus);
+            }
+        }
+
+        function renderTestimonials(testimonials) {
+            testimonialsList.replaceChildren();
+            if (!testimonials.length) {
+                testimonialsStatus.textContent = 'No testimonials yet. They show up here when someone uses the form on the homepage.';
+                return;
+            }
+            const waiting = testimonials.filter((t) => !t.published).length;
+            testimonialsStatus.textContent = `${testimonials.length} testimonial${testimonials.length === 1 ? '' : 's'}, ${waiting} not published`;
+
+            for (const t of testimonials) {
+                const item = el('li', `testimonial-item${t.published ? ' is-published' : ''}`);
+                const header = el('div', 'testimonial-item-header');
+                header.append(
+                    el('span', 'testimonial-item-name', t.name || '(no name)'),
+                    el('span', 'testimonial-item-meta', `Shown as "${t.displayName}" · ${formatDate(t.submittedAt)}`)
+                );
+
+                const actions = el('div', 'testimonial-item-actions');
+                const button = el('button', 'btn-outline btn-publish', t.published ? 'Remove from Homepage' : 'Publish on Homepage');
+                button.type = 'button';
+                button.addEventListener('click', () => setPublished(t, !t.published, button));
+                actions.append(el('span', 'publish-state', t.published ? 'On homepage' : 'Not published'), button);
+
+                item.append(header, el('p', 'testimonial-item-text', `"${t.testimonial}"`), actions);
+                testimonialsList.append(item);
+            }
+        }
+
+        async function setPublished(testimonial, published, button) {
+            const password = getSavedPassword();
+            if (!password) return showLogin('Please log in again.');
+            button.disabled = true;
+            try {
+                await adminRequest(`/api/admin/testimonials/${encodeURIComponent(testimonial.id)}/publish`, password, 'POST', { published });
+                await loadTestimonials();
+            } catch (error) {
+                button.disabled = false;
+                handleAdminError(error, testimonialsStatus);
+            }
+        }
+
         function clearLeads() {
+            testimonialsList.replaceChildren();
+            testimonialsStatus.textContent = '';
             leadsList.replaceChildren();
             leadsStatus.textContent = '';
             leadsPager.hidden = true;
@@ -1106,6 +1252,7 @@
                 leadDialog.close();
                 showDashboard(await adminRequest('/api/admin/stats', password));
                 loadLeads(leadsPage);
+                loadTestimonials();
             } catch (error) {
                 if (error.status === 401 || error.status === 429) {
                     leadDialog.close();

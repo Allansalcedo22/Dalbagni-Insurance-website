@@ -671,7 +671,14 @@ font-size: 0.95rem;
 color: #4a5568;
 line-height: 1.6;
 font-style: italic;
-margin-bottom: 20px;
+margin-bottom: 0;
+white-space: pre-line;
+overflow-wrap: anywhere;
+}
+
+/* Elements toggled with the hidden attribute stay hidden even if a class sets display */
+[hidden] {
+display: none !important;
 }
 
 /* Testimonial form */

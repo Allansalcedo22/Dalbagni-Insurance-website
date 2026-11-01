@@ -212,21 +212,20 @@
 </section>
 
     <!-- Testimonials Section
-         Real client testimonials only, shared with the client's permission (submitted through the form
-         below and saved in the admin dashboard). To publish one, add a card like this inside a
-         <div class="reviews-grid"> above the form:
-            <div class="review-card">
-                <div class="reviewer-info">
-                    <div class="avatar">M</div>
-                    <div><h4>Maria R.</h4></div>
-                </div>
-                <p>"Their exact words."</p>
-            </div>
-    -->
+         Juan publishes testimonials from the admin dashboard; they load here from /api/testimonials.
+         The "What Our Clients Say" block stays hidden until at least one is published. -->
     <section id="reviews" class="reviews-section">
         <div class="reviews-container">
+            <div id="published-testimonials" hidden>
+                <div class="google-rating-header">
+                    <span class="section-subtitle" data-en="TESTIMONIALS" data-es="TESTIMONIOS">TESTIMONIALS</span>
+                    <h2 data-en="What Our Clients Say" data-es="Lo que dicen nuestros clientes">What Our Clients Say</h2>
+                </div>
+                <div class="reviews-grid" id="testimonials-grid"></div>
+            </div>
+
             <div class="google-rating-header">
-                <span class="section-subtitle" data-en="TESTIMONIALS" data-es="TESTIMONIOS">TESTIMONIALS</span>
+                <span class="section-subtitle" id="share-subtitle" data-en="TESTIMONIALS" data-es="TESTIMONIOS">TESTIMONIALS</span>
                 <h2 data-en="Share Your Experience" data-es="Comparta su experiencia">Share Your Experience</h2>
                 <p class="testimonial-intro" data-en="Did Dalbagni Health help you or your family find coverage? We'd love to hear about it." data-es="¿Dalbagni Health le ayudó a usted o a su familia a encontrar cobertura? Nos encantaría saberlo.">Did Dalbagni Health help you or your family find coverage? We'd love to hear about it.</p>
             </div>
@@ -417,6 +416,39 @@
             }
             });
 
+    </script>
+
+    <!-- Published Testimonials: built with textContent so visitors' words can't inject HTML -->
+    <script>
+        (async function loadPublishedTestimonials() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/testimonials`);
+                const { testimonials } = await response.json();
+                if (!response.ok || !testimonials || !testimonials.length) return;
+
+                const grid = document.getElementById('testimonials-grid');
+                for (const t of testimonials) {
+                    const card = document.createElement('div');
+                    card.className = 'review-card';
+                    const info = document.createElement('div');
+                    info.className = 'reviewer-info';
+                    const avatar = document.createElement('div');
+                    avatar.className = 'avatar';
+                    avatar.textContent = (t.displayName || '?').charAt(0).toUpperCase();
+                    const name = document.createElement('h4');
+                    name.textContent = t.displayName;
+                    info.append(avatar, name);
+                    const words = document.createElement('p');
+                    words.textContent = `"${t.testimonial}"`;
+                    card.append(info, words);
+                    grid.append(card);
+                }
+                document.getElementById('published-testimonials').hidden = false;
+                document.getElementById('share-subtitle').hidden = true;
+            } catch {
+                // No testimonials to show (or the server is unreachable): the form alone still works
+            }
+        })();
     </script>
 
     <!-- Testimonial Form Submission Handler -->

@@ -743,8 +743,101 @@ def delete_lead(lead_id):
     if not result.deleted_count:
         return jsonify({"success": False, "message": "Lead not found."}), 404
 
+    clear_published_testimonials_cache()
     print(f"Admin deleted lead {lead_id}")
     return jsonify({"success": True}), 200
+
+# ---------- Testimonials ----------
+# Juan reviews testimonials in the dashboard and publishes the ones he wants on the homepage.
+
+PUBLISHED_TESTIMONIALS_LIMIT = 12
+PUBLISHED_CACHE_SECONDS = 300
+published_testimonials_cache = {"at": 0.0, "items": None}
+
+def clear_published_testimonials_cache():
+    published_testimonials_cache["items"] = None
+
+def public_display_name(full_name):
+    """'Maria Rodriguez' -> 'Maria R.': the first name and last initial the author agreed to show."""
+    parts = (full_name or "").split()
+    if len(parts) < 2:
+        return parts[0] if parts else "Client"
+    return f"{parts[0]} {parts[-1][0].upper()}."
+
+@app.route('/api/admin/testimonials', methods=['GET'])
+def list_testimonials():
+    _, error = check_admin_auth()
+    if error:
+        return error
+    try:
+        docs = list(
+            submissions_collection
+            .find({"formType": "Testimonial"}, {"name": 1, "testimonial": 1, "published": 1, "publishedAt": 1, "submittedAt": 1})
+            .sort("_id", -1)
+            .limit(200)
+        )
+    except Exception as e:
+        print(f"Error loading testimonials: {e}")
+        return jsonify({"success": False, "message": "Could not load testimonials."}), 500
+
+    testimonials = [{
+        "id": str(doc["_id"]),
+        "name": doc.get("name", ""),
+        "displayName": public_display_name(doc.get("name")),
+        "testimonial": doc.get("testimonial", ""),
+        "published": bool(doc.get("published")),
+        "submittedAt": to_json_value(submitted_at(doc)),
+    } for doc in docs]
+    return jsonify({"success": True, "testimonials": testimonials}), 200
+
+# Requires the admin password and JSON {"published": true or false}.
+@app.route('/api/admin/testimonials/<testimonial_id>/publish', methods=['POST'])
+def set_testimonial_published(testimonial_id):
+    _, error = check_admin_auth()
+    if error:
+        return error
+    published = (request.get_json(silent=True) or {}).get("published")
+    if not isinstance(published, bool):
+        return jsonify({"success": False, "message": "Choose whether to publish this testimonial."}), 400
+    if not ObjectId.is_valid(testimonial_id):
+        return jsonify({"success": False, "message": "Testimonial not found."}), 404
+
+    # Only testimonials whose author agreed to be published can go on the homepage
+    match = {"_id": ObjectId(testimonial_id), "formType": "Testimonial", "publishConsent.agreed": True}
+    change = ({"$set": {"published": True, "publishedAt": datetime.now(timezone.utc)}} if published
+              else {"$set": {"published": False}, "$unset": {"publishedAt": ""}})
+    try:
+        result = submissions_collection.update_one(match, change)
+    except Exception as e:
+        print(f"Error updating testimonial: {e}")
+        return jsonify({"success": False, "message": "Could not update this testimonial."}), 500
+    if not result.matched_count:
+        return jsonify({"success": False, "message": "Testimonial not found."}), 404
+
+    clear_published_testimonials_cache()
+    return jsonify({"success": True, "published": published}), 200
+
+# Public: the testimonials Juan published, for the homepage. Only the display name and words, never contact details.
+@app.route('/api/testimonials', methods=['GET'])
+def published_testimonials():
+    cache = published_testimonials_cache
+    if cache["items"] is None or time.time() - cache["at"] > PUBLISHED_CACHE_SECONDS:
+        try:
+            docs = (
+                submissions_collection
+                .find({"formType": "Testimonial", "published": True}, {"name": 1, "testimonial": 1})
+                .sort("publishedAt", -1)
+                .limit(PUBLISHED_TESTIMONIALS_LIMIT)
+            )
+            cache["items"] = [
+                {"displayName": public_display_name(doc.get("name")), "testimonial": doc.get("testimonial", "")}
+                for doc in docs
+            ]
+            cache["at"] = time.time()
+        except Exception as e:
+            print(f"Error loading published testimonials: {e}")
+            return jsonify({"success": False, "testimonials": []}), 500
+    return jsonify({"success": True, "testimonials": cache["items"]}), 200
 
 # The host pings this to check the server is up
 @app.route('/api/health', methods=['GET'])
