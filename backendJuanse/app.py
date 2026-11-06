@@ -25,8 +25,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-# Reject request bodies over 16 KB (the forms send well under 4 KB)
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024
+# Reject request bodies over 64 KB (the forms send well under 4 KB; a full homepage-editor save is ~15 KB)
+app.config['MAX_CONTENT_LENGTH'] = 64 * 1024
 
 # On a host like Render every request arrives through the host's proxy, so request.remote_addr
 # would be the proxy for every visitor. TRUSTED_PROXY_HOPS=1 reads the real visitor IP from the
@@ -48,6 +48,9 @@ notification_email = os.getenv("NOTIFICATION_EMAIL")
 admin_password = os.getenv("ADMIN_PASSWORD")
 # Where "Forgot password?" reset links are emailed (the site owner). Defaults to NOTIFICATION_EMAIL.
 admin_email = os.getenv("ADMIN_EMAIL") or notification_email
+# Password for the homepage editor (frontendJuanse/editor.html), for the marketing manager. It can
+# only change homepage text and fonts, never see leads. Admin passwords work in the editor too.
+editor_password = os.getenv("EDITOR_PASSWORD")
 
 if not mongo_uri:
     raise RuntimeError("MONGO_URI is missing from .env")
@@ -838,6 +841,142 @@ def published_testimonials():
             print(f"Error loading published testimonials: {e}")
             return jsonify({"success": False, "testimonials": []}), 500
     return jsonify({"success": True, "testimonials": cache["items"]}), 200
+
+# ---------- Homepage editor ----------
+# The marketing manager edits homepage text (English and Spanish) and fonts from editor.html.
+# Saved changes live in settings_collection under "site_content"; the homepage loads them from
+# /api/content and falls back to the text written in index.html for anything not changed.
+
+EDITOR_MAX_FIELDS = 150
+EDITOR_MAX_TEXT_LENGTH = 2000
+EDITOR_KEY_RE = re.compile(r"^[a-z0-9-]{1,40}$")
+CONTENT_CACHE_SECONDS = 60
+site_content_cache = {"at": 0.0, "content": None}
+
+# Font name -> (CSS font stack, Google Fonts "family" parameter, or None for a font every device has)
+FONT_OPTIONS = {
+    "Work Sans": ("'Work Sans', sans-serif", "Work+Sans:wght@400;600;700"),
+    "Unbounded": ("'Unbounded', sans-serif", "Unbounded:wght@400;600"),
+    "Georgia": ("Georgia, 'Times New Roman', serif", None),
+    "Inter": ("'Inter', sans-serif", "Inter:wght@400;600;700"),
+    "Lato": ("'Lato', sans-serif", "Lato:wght@400;700"),
+    "Montserrat": ("'Montserrat', sans-serif", "Montserrat:wght@400;600;700"),
+    "Open Sans": ("'Open Sans', sans-serif", "Open+Sans:wght@400;600;700"),
+    "Poppins": ("'Poppins', sans-serif", "Poppins:wght@400;600;700"),
+    "Nunito Sans": ("'Nunito Sans', sans-serif", "Nunito+Sans:wght@400;600;700"),
+    "Raleway": ("'Raleway', sans-serif", "Raleway:wght@400;600;700"),
+    "Playfair Display": ("'Playfair Display', Georgia, serif", "Playfair+Display:wght@400;700"),
+    "Merriweather": ("'Merriweather', Georgia, serif", "Merriweather:wght@400;700"),
+    "Lora": ("'Lora', Georgia, serif", "Lora:wght@400;700"),
+    "DM Serif Display": ("'DM Serif Display', Georgia, serif", "DM+Serif+Display"),
+}
+# body = paragraphs and buttons, display = the big top headline, heading = section headings
+DEFAULT_FONTS = {"body": "Work Sans", "display": "Unbounded", "heading": "Georgia"}
+
+def check_editor_auth():
+    """Like check_admin_auth, but also accepts the editor password. Returns an error response or None."""
+    if not editor_password and not admin_password:
+        return jsonify({"success": False, "message": "The editor is not configured."}), 503
+    if recent_request_count("editor-failure", ADMIN_LOCKOUT_SECONDS) >= ADMIN_MAX_FAILURES:
+        return jsonify({"success": False, "message": "Too many wrong passwords. Try again in 15 minutes."}), 429
+
+    supplied = request.headers.get("Authorization", "").removeprefix("Bearer ")
+    is_editor = bool(editor_password) and hmac.compare_digest(supplied.encode(), editor_password.encode())
+    if not supplied or not (is_editor or (admin_password and is_correct_admin_password(supplied))):
+        rate_limited("editor-failure", ADMIN_MAX_FAILURES, ADMIN_LOCKOUT_SECONDS)  # records the failure
+        return jsonify({"success": False, "message": "Incorrect password."}), 401
+    return None
+
+def load_site_content():
+    """Returns {"texts": {...}, "fonts": {...}, "updatedAt": ...} with defaults filled in."""
+    try:
+        doc = settings_collection.find_one({"_id": "site_content"}) or {}
+    except Exception as e:
+        print(f"Error loading site content: {e}")
+        raise
+    fonts = {role: doc.get("fonts", {}).get(role) for role in DEFAULT_FONTS}
+    fonts = {role: name if name in FONT_OPTIONS else DEFAULT_FONTS[role] for role, name in fonts.items()}
+    return {"texts": doc.get("texts", {}), "fonts": fonts, "updatedAt": to_json_value(doc.get("updatedAt"))}
+
+# Public: the homepage reads its edited text and fonts here
+@app.route('/api/content', methods=['GET'])
+def site_content():
+    cache = site_content_cache
+    if cache["content"] is None or time.time() - cache["at"] > CONTENT_CACHE_SECONDS:
+        try:
+            content = load_site_content()
+        except Exception:
+            return jsonify({"success": False}), 500
+        content["fonts"] = {
+            role: {"name": name, "stack": FONT_OPTIONS[name][0], "google": FONT_OPTIONS[name][1]}
+            for role, name in content["fonts"].items()
+        }
+        cache["content"], cache["at"] = content, time.time()
+    return jsonify({"success": True, **cache["content"]}), 200
+
+@app.route('/api/editor/content', methods=['GET'])
+def editor_get_content():
+    error = check_editor_auth()
+    if error:
+        return error
+    try:
+        content = load_site_content()
+    except Exception:
+        return jsonify({"success": False, "message": "Could not load the saved content."}), 500
+    font_options = [{"name": name, "stack": stack, "google": google} for name, (stack, google) in FONT_OPTIONS.items()]
+    return jsonify({"success": True, **content, "fontOptions": font_options, "defaultFonts": DEFAULT_FONTS}), 200
+
+# Requires the editor (or admin) password and JSON {"texts": {key: {"en": "...", "es": "..."}}, "fonts": {...}}.
+# Replaces all saved edits: a field left out goes back to the text written in index.html.
+@app.route('/api/editor/content', methods=['PUT'])
+def editor_save_content():
+    error = check_editor_auth()
+    if error:
+        return error
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict) or not isinstance(data.get("texts", {}), dict) or not isinstance(data.get("fonts", {}), dict):
+        return jsonify({"success": False, "message": "Nothing to save."}), 400
+
+    texts = {}
+    for key, value in data.get("texts", {}).items():
+        if not isinstance(key, str) or not EDITOR_KEY_RE.match(key) or not isinstance(value, dict):
+            return jsonify({"success": False, "message": "Some of the content couldn't be read. Reload the editor and try again."}), 400
+        entry = {}
+        for lang in ("en", "es"):
+            text = value.get(lang)
+            if text is None:
+                continue
+            if not isinstance(text, str) or len(text) > EDITOR_MAX_TEXT_LENGTH:
+                return jsonify({"success": False, "message": f"Each text must be under {EDITOR_MAX_TEXT_LENGTH} characters."}), 400
+            text = text.replace("\r\n", "\n").strip()
+            if text:
+                entry[lang] = text
+        if entry:
+            texts[key] = entry
+    if len(texts) > EDITOR_MAX_FIELDS:
+        return jsonify({"success": False, "message": "Too many fields to save."}), 400
+
+    fonts = {}
+    for role, default in DEFAULT_FONTS.items():
+        name = data.get("fonts", {}).get(role, default)
+        if name not in FONT_OPTIONS:
+            return jsonify({"success": False, "message": "Please choose a font from the list."}), 400
+        fonts[role] = name
+
+    updated_at = datetime.now(timezone.utc)
+    try:
+        settings_collection.update_one(
+            {"_id": "site_content"},
+            {"$set": {"texts": texts, "fonts": fonts, "updatedAt": updated_at}},
+            upsert=True,
+        )
+    except Exception as e:
+        print(f"Error saving site content: {e}")
+        return jsonify({"success": False, "message": "Could not save. Please try again."}), 500
+
+    site_content_cache["content"] = None
+    print(f"Homepage content saved ({len(texts)} edited fields)")
+    return jsonify({"success": True, "updatedAt": to_json_value(updated_at)}), 200
 
 # The host pings this to check the server is up
 @app.route('/api/health', methods=['GET'])

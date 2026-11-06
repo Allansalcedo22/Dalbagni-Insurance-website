@@ -33,6 +33,8 @@ services:
         sync: false
       - key: ADMIN_PASSWORD
         sync: false
+      - key: EDITOR_PASSWORD
+        sync: false
 
   # Website pages, served at https://dalbagnihealth.com
   - type: web
@@ -46,6 +48,9 @@ services:
       - type: rewrite
         source: /admin
         destination: /admin.html
+      - type: rewrite
+        source: /editor
+        destination: /editor.html
     headers:
       - path: /*
         name: X-Content-Type-Options

@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Keep the editor out of search results -->
+    <meta name="robots" content="noindex, nofollow">
+    <title>Homepage Editor | Dalbagni Health</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="quote.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400&family=Work+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+    <style>
+        /* quote.css sets display on forms and buttons, which would otherwise override the hidden attribute */
+        [hidden] {
+            display: none !important;
+        }
+
+        .editor-login {
+            max-width: 440px;
+        }
+
+        .editor-main {
+            max-width: 980px;
+            padding-bottom: 110px;
+        }
+
+        .editor-error {
+            color: #e74c3c;
+            font-size: 0.9rem;
+            min-height: 1.2em;
+            margin: 0;
+        }
+
+        .btn-outline {
+            background: none;
+            border: 2px solid #0b2d52;
+            color: #0b2d52;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 600;
+            padding: 10px 24px;
+            border-radius: 50px;
+            cursor: pointer;
+            white-space: nowrap;
+            text-decoration: none;
+        }
+
+        .btn-outline:hover {
+            background-color: #0b2d52;
+            color: #ffffff;
+        }
+
+        .editor-tips {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 14px 18px;
+            font-size: 0.9rem;
+            color: #475569;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .editor-tips code {
+            background-color: #e2e8f0;
+            border-radius: 4px;
+            padding: 1px 5px;
+        }
+
+        .editor-group {
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            margin-bottom: 14px;
+            background-color: #ffffff;
+        }
+
+        .editor-group summary {
+            cursor: pointer;
+            padding: 16px 20px;
+            font-weight: 600;
+            font-size: 1.05rem;
+            color: #0b2d52;
+            list-style-position: inside;
+        }
+
+        .editor-group summary .edited-count {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #8a6500;
+            margin-left: 8px;
+        }
+
+        .editor-group-body {
+            padding: 4px 20px 20px;
+        }
+
+        .editor-field {
+            padding: 14px 0;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .editor-field-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .editor-field-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #334155;
+        }
+
+        .editor-field.is-edited .editor-field-label::after {
+            content: "Edited";
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #8a6500;
+            background-color: #fdf3d3;
+            border-radius: 50px;
+            padding: 2px 8px;
+            margin-left: 8px;
+        }
+
+        .editor-reset {
+            background: none;
+            border: none;
+            color: #1d5288;
+            font-family: inherit;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: underline;
+            padding: 0;
+        }
+
+        .editor-langs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .editor-langs label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .editor-langs textarea,
+        .font-row select {
+            width: 100%;
+            font-family: inherit;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            padding: 10px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            background-color: #ffffff;
+            resize: vertical;
+            outline: none;
+        }
+
+        .editor-langs textarea:focus,
+        .font-row select:focus {
+            border-color: #1d5288;
+            box-shadow: 0 0 0 3px rgba(29, 82, 136, 0.15);
+        }
+
+        .font-row {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            gap: 8px 16px;
+            align-items: center;
+            padding: 12px 0;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .font-sample {
+            grid-column: 2;
+            font-size: 1.3rem;
+            color: #0b2d52;
+            overflow-wrap: anywhere;
+        }
+
+        .save-bar {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ffffff;
+            border-top: 1px solid #e2e8f0;
+            box-shadow: 0 -6px 20px rgba(11, 45, 82, 0.08);
+            padding: 14px 20px;
+            z-index: 50;
+        }
+
+        .save-bar-inner {
+            max-width: 980px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .save-status {
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        .save-status.unsaved {
+            color: #8a6500;
+            font-weight: 600;
+        }
+
+        .save-status.error {
+            color: #c0392b;
+        }
+
+        .save-bar-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .save-bar .submit-quote-btn {
+            width: auto;
+            margin: 0;
+            padding: 12px 28px;
+        }
+
+        @media screen and (max-width: 700px) {
+            .editor-langs,
+            .font-row {
+                grid-template-columns: 1fr;
+            }
+
+            .font-sample {
+                grid-column: 1;
+            }
+
+            .save-bar-buttons {
+                width: 100%;
+            }
+
+            .save-bar-buttons > * {
+                flex: 1;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <img src="images/logo.png" alt="Dalbagni Health Logo">
+            </a>
+            <div class="nav-actions">
+                <button type="button" id="logout-btn" class="btn-outline" hidden>Log Out</button>
+                <a href="index.html" class="back-link">← Back to Home</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="quote-page-wrapper">
+
+        <!-- Login -->
+        <section id="login-view" class="quote-container editor-login">
+            <div class="quote-header">
+                <span class="subtitle">Staff Only</span>
+                <h1>Homepage Editor</h1>
+            </div>
+            <form id="login-form" class="quote-form">
+                <div class="form-group">
+                    <label for="editor-password">Password</label>
+                    <input type="password" id="editor-password" autocomplete="current-password" required>
+                </div>
+                <p id="login-error" class="editor-error" role="alert"></p>
+                <button type="submit" class="submit-quote-btn">Log In</button>
+            </form>
+        </section>
+
+        <!-- Editor -->
+        <section id="editor-view" class="quote-container editor-main" hidden>
+            <div class="quote-header">
+                <span class="subtitle">Homepage Editor</span>
+                <h1>Edit the Homepage</h1>
+                <p>Change the text and fonts on dalbagnihealth.com. Nothing changes on the site until you click Save.</p>
+            </div>
+
+            <div class="editor-tips">
+                <strong>Tips:</strong> Every text has an English and a Spanish box, so update both.
+                Press Enter for a new line. Put two asterisks around words to make them bold: <code>**31+ states**</code>.
+                "Reset" puts a text back to the original. Changes show on the homepage within about a minute.
+            </div>
+
+            <details class="editor-group" open>
+                <summary>Fonts</summary>
+                <div class="editor-group-body" id="font-fields"></div>
+            </details>
+
+            <div id="text-groups"></div>
+            <p id="editor-load-error" class="editor-error" role="alert"></p>
+        </section>
+    </main>
+
+    <div class="save-bar" id="save-bar" hidden>
+        <div class="save-bar-inner">
+            <span class="save-status" id="save-status" role="status">All changes saved</span>
+            <div class="save-bar-buttons">
+                <a href="index.html" target="_blank" rel="noopener" class="btn-outline">View Homepage</a>
+                <button type="button" id="save-btn" class="submit-quote-btn">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        // The password is kept only for this browser tab (cleared when the tab closes or on Log Out).
+        const STORAGE_KEY = 'dalbagni-editor-password';
+        const FONT_ROLES = [
+            ['display', 'Top headline', 'Helping Families and Communities'],
+            ['heading', 'Section headings', 'Health coverage built around your life'],
+            ['body', 'Body text and buttons', 'Personal plans matched to your health needs and your budget.'],
+        ];
+
+        const loginView = document.getElementById('login-view');
+        const editorView = document.getElementById('editor-view');
+        const loginForm = document.getElementById('login-form');
+        const loginError = document.getElementById('login-error');
+        const logoutBtn = document.getElementById('logout-btn');
+        const saveBar = document.getElementById('save-bar');
+        const saveBtn = document.getElementById('save-btn');
+        const saveStatus = document.getElementById('save-status');
+        const fontFields = document.getElementById('font-fields');
+        const textGroups = document.getElementById('text-groups');
+
+        let fields = [];        // { key, defaults: {en, es}, inputs: {en, es}, row }
+        let fontSelects = {};   // role -> <select>
+        let savedState = '';    // what the server has, to know if there are unsaved changes
+
+        function getSavedPassword() {
+            try { return sessionStorage.getItem(STORAGE_KEY); } catch { return null; }
+        }
+
+        function savePassword(password) {
+            try { sessionStorage.setItem(STORAGE_KEY, password); } catch { /* storage blocked: stay logged in until reload */ }
+        }
+
+        function clearPassword() {
+            try { sessionStorage.removeItem(STORAGE_KEY); } catch { /* nothing to clear */ }
+        }
+
+        function el(tag, className, text) {
+            const node = document.createElement(tag);
+            if (className) node.className = className;
+            if (text !== undefined) node.textContent = text;
+            return node;
+        }
+
+        async function editorRequest(method, password, body) {
+            const headers = { 'Authorization': `Bearer ${password}` };
+            if (body !== undefined) headers['Content-Type'] = 'application/json';
+            let response;
+            try {
+                response = await fetch(`${API_BASE_URL}/api/editor/content`, {
+                    method,
+                    headers,
+                    body: body === undefined ? undefined : JSON.stringify(body)
+                });
+            } catch {
+                throw new Error('Could not reach the server. Please check your connection.');
+            }
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || !data.success) {
+                const error = new Error(data.message || 'Something went wrong. Please try again.');
+                error.status = response.status;
+                throw error;
+            }
+            return data;
+        }
+
+        function showLogin(message) {
+            editorView.hidden = true;
+            saveBar.hidden = true;
+            logoutBtn.hidden = true;
+            loginView.hidden = false;
+            loginError.textContent = message || '';
+        }
+
+        // The homepage's own text (in data-en / data-es) as editor text: <br> -> new line, <strong> -> **bold**
+        function htmlToEditable(html) {
+            const text = (html || '')
+                .replace(/<br\s*\/?>/gi, '\n')
+                .replace(/<strong>(.*?)<\/strong>/gi, '**$1**')
+                .replace(/<[^>]+>/g, '');
+            const decoder = document.createElement('textarea');
+            decoder.innerHTML = text;
+            return normalize(decoder.value);
+        }
+
+        function normalize(text) {
+            return text.split('\n').map((line) => line.replace(/\s+/g, ' ').trim()).join('\n').trim();
+        }
+
+        // Reads the editable fields straight from index.html, so the editor always matches the homepage
+        async function loadHomepageFields() {
+            const response = await fetch('index.html', { cache: 'no-store' });
+            if (!response.ok) throw new Error('Could not load the homepage.');
+            const page = new DOMParser().parseFromString(await response.text(), 'text/html');
+            return [...page.querySelectorAll('[data-edit-section]')].map((section) => ({
+                name: section.dataset.editSection,
+                fields: [...section.querySelectorAll('[data-edit]')].map((node) => ({
+                    key: node.dataset.edit,
+                    label: node.dataset.editLabel || node.dataset.edit,
+                    defaults: { en: htmlToEditable(node.dataset.en), es: htmlToEditable(node.dataset.es) },
+                })),
+            })).filter((section) => section.fields.length);
+        }
+
+        function sizeTextarea(textarea) {
+            textarea.rows = Math.min(8, Math.max(1, Math.ceil(textarea.value.length / 48) + textarea.value.split('\n').length - 1));
+        }
+
+        function renderFonts(content) {
+            fontFields.replaceChildren();
+            fontSelects = {};
+            // Load every font option so the samples show what each one looks like
+            const families = content.fontOptions.filter((f) => f.google).map((f) => `family=${f.google}`).join('&');
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = `https://fonts.googleapis.com/css2?${families}&display=swap`;
+            document.head.append(link);
+
+            for (const [role, label, sampleText] of FONT_ROLES) {
+                const row = el('div', 'font-row');
+                const select = el('select');
+                select.id = `font-${role}`;
+                for (const option of content.fontOptions) {
+                    const isDefault = content.defaultFonts[role] === option.name;
+                    const node = el('option', '', isDefault ? `${option.name} (original)` : option.name);
+                    node.value = option.name;
+                    select.append(node);
+                }
+                select.value = content.fonts[role];
+                const name = el('label', 'editor-field-label', label);
+                name.htmlFor = select.id;
+                const sample = el('div', 'font-sample', sampleText);
+                const updateSample = () => {
+                    const option = content.fontOptions.find((f) => f.name === select.value);
+                    sample.style.fontFamily = option ? option.stack : '';
+                    updateSaveStatus();
+                };
+                select.addEventListener('change', updateSample);
+                row.append(name, select, sample);
+                fontFields.append(row);
+                fontSelects[role] = select;
+                updateSample();
+            }
+        }
+
+        function renderTexts(sections, saved) {
+            textGroups.replaceChildren();
+            fields = [];
+            sections.forEach((section) => {
+                const group = el('details', 'editor-group');
+                const summary = el('summary', '', section.name);
+                const count = el('span', 'edited-count');
+                summary.append(count);
+                const body = el('div', 'editor-group-body');
+
+                const groupFields = section.fields.map((field) => {
+                    const row = el('div', 'editor-field');
+                    const header = el('div', 'editor-field-header');
+                    const reset = el('button', 'editor-reset', 'Reset');
+                    reset.type = 'button';
+                    header.append(el('span', 'editor-field-label', field.label), reset);
+
+                    const langs = el('div', 'editor-langs');
+                    const inputs = {};
+                    for (const [lang, langLabel] of [['en', 'English'], ['es', 'Español']]) {
+                        const wrap = el('div');
+                        const textarea = el('textarea');
+                        textarea.id = `field-${field.key}-${lang}`;
+                        textarea.maxLength = 2000;
+                        textarea.value = (saved[field.key] && saved[field.key][lang]) || field.defaults[lang];
+                        const name = el('label', '', langLabel);
+                        name.htmlFor = textarea.id;
+                        sizeTextarea(textarea);
+                        textarea.addEventListener('input', () => {
+                            sizeTextarea(textarea);
+                            refreshField(entry);
+                        });
+                        wrap.append(name, textarea);
+                        langs.append(wrap);
+                        inputs[lang] = textarea;
+                    }
+                    row.append(header, langs);
+                    body.append(row);
+
+                    const entry = { ...field, inputs, row, count, groupFields: null };
+                    reset.addEventListener('click', () => {
+                        for (const lang of ['en', 'es']) {
+                            inputs[lang].value = field.defaults[lang];
+                            sizeTextarea(inputs[lang]);
+                        }
+                        refreshField(entry);
+                    });
+                    fields.push(entry);
+                    return entry;
+                });
+                groupFields.forEach((entry) => { entry.groupFields = groupFields; });
+
+                group.append(summary, body);
+                textGroups.append(group);
+                groupFields.forEach(refreshField);
+            });
+        }
+
+        function isEdited(field, lang) {
+            return normalize(field.inputs[lang].value) !== field.defaults[lang];
+        }
+
+        function refreshField(field) {
+            field.row.classList.toggle('is-edited', isEdited(field, 'en') || isEdited(field, 'es'));
+            const edited = field.groupFields.filter((f) => f.row.classList.contains('is-edited')).length;
+            field.count.textContent = edited ? `${edited} edited` : '';
+            updateSaveStatus();
+        }
+
+        // Only texts that differ from the homepage's original are saved
+        function collectChanges() {
+            const texts = {};
+            for (const field of fields) {
+                const entry = {};
+                for (const lang of ['en', 'es']) {
+                    if (isEdited(field, lang)) entry[lang] = field.inputs[lang].value.trim();
+                }
+                if (Object.keys(entry).length) texts[field.key] = entry;
+            }
+            const fonts = {};
+            for (const [role, select] of Object.entries(fontSelects)) fonts[role] = select.value;
+            return { texts, fonts };
+        }
+
+        function hasUnsavedChanges() {
+            return fields.length > 0 && JSON.stringify(collectChanges()) !== savedState;
+        }
+
+        function updateSaveStatus(message, kind) {
+            if (message) {
+                saveStatus.textContent = message;
+                saveStatus.className = `save-status ${kind || ''}`;
+                return;
+            }
+            const unsaved = hasUnsavedChanges();
+            saveStatus.textContent = unsaved ? 'You have unsaved changes' : 'All changes saved';
+            saveStatus.className = `save-status${unsaved ? ' unsaved' : ''}`;
+        }
+
+        async function openEditor(password) {
+            const content = await editorRequest('GET', password);
+            savePassword(password);
+            loginView.hidden = true;
+            editorView.hidden = false;
+            saveBar.hidden = false;
+            logoutBtn.hidden = false;
+            document.getElementById('editor-load-error').textContent = '';
+            try {
+                const sections = await loadHomepageFields();
+                renderFonts(content);
+                renderTexts(sections, content.texts || {});
+                savedState = JSON.stringify(collectChanges());
+                updateSaveStatus();
+            } catch (error) {
+                document.getElementById('editor-load-error').textContent = error.message;
+            }
+        }
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const password = document.getElementById('editor-password').value;
+            loginError.textContent = '';
+            try {
+                await openEditor(password);
+                loginForm.reset();
+            } catch (error) {
+                clearPassword();
+                showLogin(error.message);
+            }
+        });
+
+        saveBtn.addEventListener('click', async () => {
+            const password = getSavedPassword();
+            if (!password) return showLogin('Please log in again.');
+            const changes = collectChanges();
+            saveBtn.disabled = true;
+            updateSaveStatus('Saving...');
+            try {
+                await editorRequest('PUT', password, changes);
+                savedState = JSON.stringify(changes);
+                updateSaveStatus('Saved! The homepage updates within about a minute.');
+            } catch (error) {
+                if (error.status === 401 || error.status === 429) {
+                    clearPassword();
+                    return showLogin(error.message);
+                }
+                updateSaveStatus(error.message, 'error');
+            } finally {
+                saveBtn.disabled = false;
+            }
+        });
+
+        logoutBtn.addEventListener('click', () => {
+            if (hasUnsavedChanges() && !confirm('You have unsaved changes. Log out anyway?')) return;
+            clearPassword();
+            fields = [];
+            textGroups.replaceChildren();
+            fontFields.replaceChildren();
+            showLogin();
+        });
+
+        // Warn before leaving the page with unsaved changes
+        window.addEventListener('beforeunload', (e) => {
+            if (hasUnsavedChanges()) e.preventDefault();
+        });
+
+        // Stay logged in on refresh within the same tab
+        const existingPassword = getSavedPassword();
+        if (existingPassword) {
+            openEditor(existingPassword).catch((error) => {
+                clearPassword();
+                showLogin(error.status === 401 || error.status === 429 ? 'Please log in again.' : error.message);
+            });
+        }
+    </script>
+</body>
+</html>
