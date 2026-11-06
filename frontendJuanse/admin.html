@@ -229,6 +229,12 @@
             color: #166534;
         }
 
+        .testimonial-item-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
         .btn-publish {
             font-size: 0.85rem;
             padding: 8px 18px;
@@ -1071,7 +1077,12 @@
                 const button = el('button', 'btn-outline btn-publish', t.published ? 'Remove from Homepage' : 'Publish on Homepage');
                 button.type = 'button';
                 button.addEventListener('click', () => setPublished(t, !t.published, button));
-                actions.append(el('span', 'publish-state', t.published ? 'On homepage' : 'Not published'), button);
+                const deleteButton = el('button', 'btn-danger', 'Delete');
+                deleteButton.type = 'button';
+                deleteButton.addEventListener('click', () => deleteTestimonial(t, deleteButton));
+                const buttons = el('div', 'testimonial-item-buttons');
+                buttons.append(deleteButton, button);
+                actions.append(el('span', 'publish-state', t.published ? 'On homepage' : 'Not published'), buttons);
 
                 item.append(header, el('p', 'testimonial-item-text', `"${t.testimonial}"`), actions);
                 testimonialsList.append(item);
@@ -1085,6 +1096,23 @@
             try {
                 await adminRequest(`/api/admin/testimonials/${encodeURIComponent(testimonial.id)}/publish`, password, 'POST', { published });
                 await loadTestimonials();
+            } catch (error) {
+                button.disabled = false;
+                handleAdminError(error, testimonialsStatus);
+            }
+        }
+
+        async function deleteTestimonial(testimonial, button) {
+            const who = testimonial.name || 'this testimonial';
+            if (!confirm(`Permanently delete the testimonial from ${who}? This can't be undone.`)) return;
+            const password = getSavedPassword();
+            if (!password) return showLogin('Please log in again.');
+            button.disabled = true;
+            try {
+                // Testimonials are stored with the leads, so the lead delete endpoint removes them
+                await adminRequest(`/api/admin/leads/${encodeURIComponent(testimonial.id)}`, password, 'DELETE');
+                await loadTestimonials();
+                loadLeads(leadsPage);
             } catch (error) {
                 button.disabled = false;
                 handleAdminError(error, testimonialsStatus);
